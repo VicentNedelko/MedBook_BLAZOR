@@ -1,0 +1,100 @@
+﻿@using Business.DTO
+@using DAL.Enum
+
+<!-- Modal -->
+@if (showModal)
+{
+    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">@Header</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-4" style="text-align:right">
+                            <label>Name</label>
+                        </div>
+                        <div class="col-md-8">
+                            <InputText @bind-Value="InputModel!.Name" class="form-control" aria-required="true" />
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="row">
+                        <div class="col-md-4" style="text-align:right">
+                            <label>Type</label>
+                        </div>
+                        <div class="col-md-8">
+                            <InputSelect id="type" @bind-Value="InputModel.Type" @bind-Value:after="IsDigitalValue" class="form-select" aria-required="true" placeholder="Select type">
+                                <option value=@InputModel.Type selected disabled>@(InputModel.Type == IndTYPE.VALUE ? "Digital value" : "YES/NO")</option>
+                                <option value=@(InputModel.Type == IndTYPE.VALUE ? IndTYPE.YESNO : IndTYPE.VALUE)>@(InputModel.Type == IndTYPE.VALUE ? "YES/NO" : "Digital value")</option>
+                            </InputSelect>
+                        </div>
+                    </div>
+                    <hr />
+                    @if (isDigitalIndicator)
+                    {
+                        <div class="row">
+                            <div class="col-md-4" style="text-align:right">
+                                <label>Reference</label>
+                            </div>
+                            <div class="col-md-2">
+                                <InputNumber @bind-Value="InputModel!.ReferenceMin" class="form-control" aria-required="true" />
+                            </div>
+                            <div class="col-md-2">
+                                <InputNumber @bind-Value="InputModel!.ReferenceMax" class="form-control" aria-required="true" />
+                            </div>
+                            <div class="col-md-4">
+                                <InputText @bind-Value="InputModel!.Unit" class="form-control" aria-required="true" />
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        InputModel.ReferenceMin = null;
+                        InputModel.ReferenceMax = null;
+                        InputModel.Unit = null;
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => showModal = false">Close</button>
+                    <button type="button" class="btn btn-primary" @onclick="async () => await OnUpdateBearingIndicator(InputModel)">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Body { get; set; } = "Body";
+
+    [Parameter]
+    public string Header { get; set; } = "Header";
+
+    [Parameter]
+    public EventCallback<BearingIndicatorDto> UpdateBearingIndicator { get; set; }
+
+    private BearingIndicatorDto InputModel { get; set; } = new();
+
+    private bool showModal;
+
+    private bool isDigitalIndicator;
+
+    public void Show(BearingIndicatorDto indicatorDto)
+    {
+        InputModel = indicatorDto;
+        showModal = true;
+        isDigitalIndicator = indicatorDto.Type == IndTYPE.VALUE ? true : false;
+        StateHasChanged();
+    }
+
+    private void IsDigitalValue() => isDigitalIndicator = InputModel.Type == IndTYPE.VALUE ? true : false;
+
+    private async Task OnUpdateBearingIndicator(BearingIndicatorDto indicatorDto)
+    {
+        showModal = false;
+        await UpdateBearingIndicator.InvokeAsync(indicatorDto);
+    }
+}

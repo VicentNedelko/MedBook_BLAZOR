@@ -1,0 +1,40 @@
+﻿@inject NavigationManager NavigationManager
+@inject ILogger<HeaderMenu> Logger
+
+@rendermode InteractiveServer
+
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <AuthorizeView>
+        <div class="container-fluid">
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Link</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link disabled" aria-disabled="true">Disabled</a>
+                    </li>
+                </ul>
+                <form class="d-flex" role="search" @onsubmit="Search" @formname="SearchIndicator">
+                    <InputText class="form-control me-2" @bind-value="SearchValue" type="search" placeholder="Search indicator" aria-label="Search" />
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                </form>
+            </div>
+        </div>
+    </AuthorizeView>
+</nav>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationState { get; set; }
+
+    public string? SearchValue { get; set; }
+
+    private void Search()
+    {
+        Logger.LogInformation($"Search for {SearchValue}");
+    }
+}

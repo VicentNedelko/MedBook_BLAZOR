@@ -1,0 +1,201 @@
+﻿@page "/Indicator/Bearings"
+@attribute [Authorize(Roles = "Doctor")]
+
+@using System.ComponentModel.DataAnnotations
+@using AutoMapper
+@using AutoMapper.QueryableExtensions
+@using Business.Services
+@using Business.Enum
+@using Business.DTO
+@using DAL.Data
+@using DAL.Enum
+@using MedBook.Requests
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using MedBook.Components.Layout
+@using Microsoft.AspNetCore.Components.QuickGrid
+
+@rendermode InteractiveServer
+
+@implements IAsyncDisposable
+
+@inject ToastService ToastService
+@inject IMediator Mediator
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject IMapper Mapper
+
+<PageTitle>Bearing Indicator</PageTitle>
+
+<Toast />
+
+<Modal @ref="modal" UpdateBearingIndicator="UpdateBearingIndicator"/>
+
+<div class="row">
+    <div class="col-md-4">
+        <EditForm Model="InputModel" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="AddNewBearingIndicatorAsync" FormName="addNewBearingIndicator">
+            <DataAnnotationsValidator />
+            <h2>Create a new indicator.</h2>
+            <hr />
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="form-floating mb-3">
+                <InputText id="name" @bind-value="InputModel.Name" class="form-control" aria-required="true" />
+                <label for="name">Name</label>
+                <ValidationMessage For="() => InputModel.Name" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputSelect id="type" @bind-Value="InputModel.Type" @bind-Value:after="IsDigitalValue" class="form-select" aria-required="true" placeholder="Select type">
+                    <option value=@IndTYPE.NONE selected disabled>Select TYPE</option>
+                    <option value=@IndTYPE.VALUE>Digital value</option>
+                    <option value=@IndTYPE.YESNO>YES/NO</option>
+                </InputSelect>
+                <label for="type">Indicator TYPE</label>
+                <ValidationMessage For="() => InputModel.Type" class="text-danger" />
+            </div>
+            @if (isDigitalIndicator)
+            {
+                <div class="form-floating mb-3">
+                    <InputNumber @bind-value="InputModel.ReferenceMax" class="form-control" aria-required="true" />
+                    <label for="MAXReference">MIN Reference</label>
+                    <ValidationMessage For="() => InputModel.ReferenceMin" class="text-danger" />
+                </div>
+                <div class="form-floating mb-3">
+                    <InputNumber @bind-Value="InputModel.ReferenceMin" class="form-control" aria-required="true" />
+                    <label for="MINReference">MAX Reference</label>
+                    <ValidationMessage For="() => InputModel.ReferenceMax" class="text-danger" />
+                </div>
+                <div class="form-floating mb-3">
+                    <InputText type="unit" @bind-Value="InputModel.Unit" class="form-control" aria-required="true" />
+                    <label for="unit">Unit</label>
+                    <ValidationMessage For="() => InputModel.Unit" class="text-danger" />
+                </div>
+            }
+            <div class="form-floating mb-3">
+                <InputText type="description" @bind-Value="InputModel.Description" class="form-control" aria-required="true" />
+                <label for="description">Description</label>
+                <ValidationMessage For="() => InputModel.Description" class="text-danger" />
+            </div>
+            <button type="submit" class="w-100 btn btn-lg btn-primary">Add indicator</button>
+        </EditForm>
+    </div>
+    <div class="col-md-8">
+        <QuickGrid Class="table table-striped m-0" Items="bearingIndicators.AsQueryable()" Pagination="pagination">
+            <PropertyColumn Property="@(bi => bi.Name)" Title="Name" Sortable="true" IsDefaultSortColumn InitialSortDirection="SortDirection.Ascending">
+                <ColumnOptions>
+                    <div class="search-box">
+                        <input type="search" autofocus @bind="nameFilter" placeholder="Indicator name" @bind:event="oninput" />
+                    </div>
+                </ColumnOptions>
+            </PropertyColumn>
+            <TemplateColumn Title="Reference Min" Align="Align.Center">
+                @if (context.ReferenceMin is not null)
+                {
+                    <span>@context.ReferenceMin</span>
+                }
+                else
+                {
+                    <span>-</span>
+                }
+            </TemplateColumn>
+            <TemplateColumn Title="Reference Max" Align="Align.Center">
+                @if(context.ReferenceMax is not null)
+                {
+                    <span>@context.ReferenceMax</span>
+                }
+                else
+                {
+                    <span>-</span>
+                }
+            </TemplateColumn>
+            <TemplateColumn Title="Unit" Align="Align.Center">
+                @if (context.Unit is not null)
+                {
+                    <span>@context.Unit</span>
+                }
+                else
+                {
+                    <span>Yes/No</span>
+                }
+            </TemplateColumn>
+            <PropertyColumn Property="@(bi => bi.Description)" Title="Description" />
+            <TemplateColumn>
+                <button type="button" @onclick="async() => await OnEditIndicator(context)" class="btn btn-outline-primary">Edit</button>
+            </TemplateColumn>
+        </QuickGrid>
+        <Paginator State="pagination" />
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private BearingIndicatorDto InputModel { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private bool isDigitalIndicator = true;
+
+    protected Modal modal { get; set; }
+
+    private string nameFilter = string.Empty;
+
+    private ApplicationDbContext context = default;
+
+    PaginationState pagination = new PaginationState { ItemsPerPage = 15 };
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    protected async Task UpdateBearingIndicator(BearingIndicatorDto indicatorDto)
+    {
+        var response = await Mediator.Send(new UpdateBearingIndicatorRequest(indicatorDto));
+        if (response.Status != -1)
+        {
+            ToastService.ShowToast($"Indicator {indicatorDto.Name} updated successfully.", ToastLevel.Info);
+        }
+        else
+        {
+            ToastService.ShowToast($"Updates indicator {indicatorDto.Name} failed!", ToastLevel.Error);
+        }
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+
+    private async Task OnEditIndicator(BearingIndicatorDto bearingIndicatorDto) => modal.Show(bearingIndicatorDto);
+
+    private IList<BearingIndicatorDto> bearingIndicators => string.IsNullOrEmpty(nameFilter) ?
+                                                                    context.BearingIndicators
+                                                                            .AsNoTracking()
+                                                                            .ProjectTo<BearingIndicatorDto>(Mapper.ConfigurationProvider)
+                                                                            .ToList() :
+                                                                        context.BearingIndicators
+                                                                            .AsNoTracking()
+                                                                            .Where(x => x.Name.Contains(nameFilter))
+                                                                            .ProjectTo<BearingIndicatorDto>(Mapper.ConfigurationProvider)
+                                                                            .ToList();
+
+    private void ResetForm()
+    {
+        InputModel = new();
+    }
+
+    private async Task AddNewBearingIndicatorAsync()
+    {
+        var response = await Mediator.Send(new AddBearingIndicatorRequest(InputModel));
+        if (response.Status != -1)
+        {
+            ResetForm();
+            ToastService.ShowToast($"Indicator {InputModel.Name} saved successfully.", ToastLevel.Info);
+        }
+        else
+        {
+            ToastService.ShowToast($"Indicator {InputModel.Name} already exists. Check indicator name and try again!", ToastLevel.Error);
+        }
+    }
+
+    private void IsDigitalValue()
+    {
+        isDigitalIndicator = InputModel.Type == IndTYPE.VALUE ? true : false;
+    }
+}

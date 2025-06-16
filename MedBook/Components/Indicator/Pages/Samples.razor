@@ -1,0 +1,143 @@
+﻿@page "/Indicator/Samples"
+@attribute [Authorize(Roles = "Doctor")]
+
+@using AutoMapper.QueryableExtensions
+@using Business.DTO
+@using Business.Enum
+@using Business.Services
+@using DAL.Data
+@using DAL.Enum
+@using MedBook.Requests
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using AutoMapper
+@using MedBook.Components.Layout
+
+@implements IDisposable
+
+@rendermode InteractiveServer
+
+@inject ToastService ToastService
+@inject IMediator Mediator
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+@inject IMapper Mapper
+@inject ILogger<Samples> Logger
+@inject NavigationManager NavigationManager
+
+<PageTitle>Sample Indicator</PageTitle>
+
+<Toast />
+
+<div class="row">
+    <div class="col-md-4">
+        <EditForm Model="InputModel" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="AddNewSampleIndicatorAsync" FormName="addNewSampleIndicator">
+            <DataAnnotationsValidator />
+            <h2>Create a new sample indicator.</h2>
+            <hr />
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="form-floating mb-3">
+                <InputText id="name" @bind-value="InputModel.Name" class="form-control" aria-required="true" />
+                <label for="name">Name</label>
+                <ValidationMessage For="() => InputModel.Name" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputSelect id="type" @bind-Value="InputModel.BearingIndicatorId" @bind-Value:after="FillIndicatorParameters" class="form-select" aria-required="true" placeholder="Select bearing">
+                    <option value=null selected disabled>Select bearing indicator</option>
+                    @foreach (var bi in bearingIndicators)
+                    {
+                        <option value=@bi.Id>@bi.Name</option>
+                    }
+                </InputSelect>
+                <label for="bearing">Bearing indicator</label>
+                <ValidationMessage For="() => InputModel.BearingIndicatorId" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText id="name" @bind-value="bearingModel.Unit" class="form-control" disabled="true" />
+                <label for="name">Unit</label>
+            </div>
+            <div class="form-floating mb-3">
+                <InputNumber id="name" @bind-value="bearingModel.ReferenceMax" class="form-control" disabled="true" />
+                <label for="name">Reference MAX</label>
+            </div>
+            <div class="form-floating mb-3">
+                <InputNumber id="name" @bind-value="bearingModel.ReferenceMin" class="form-control" disabled="true" />
+                <label for="name">Reference MIN</label>
+            </div>
+            <div class="form-floating mb-3">
+                <InputText id="name" @bind-value="bearingModel.Description" class="form-control" disabled="true" />
+                <label for="name">Description</label>
+            </div>
+            <button type="submit" class="w-100 btn btn-lg btn-primary" disabled="@isButtonDisable">Add indicator</button>
+        </EditForm>
+    </div>
+    <div class="col-md-4">
+        <Search />
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState>? authenticationState { get; set; }
+
+    [SupplyParameterFromForm]
+    private SampleIndicatorDto InputModel { get; set; } = new();
+
+    private BearingIndicatorDto bearingModel = new();
+
+    private string SearchValue = string.Empty;
+
+    private string userRole = string.Empty;
+
+    private bool isButtonDisable = true;
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private ApplicationDbContext Context { get; set; }
+
+    private List<BearingIndicatorDto> bearingIndicators = new();
+
+    public void Dispose() => Context?.Dispose();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Context = await DbFactory.CreateDbContextAsync();
+
+        bearingIndicators = await Context.BearingIndicators.ProjectTo<BearingIndicatorDto>(Mapper.ConfigurationProvider).ToListAsync();
+    }
+
+    private void FillIndicatorParameters()
+    {
+        bearingModel = bearingIndicators.FirstOrDefault(x => x.Id == InputModel.BearingIndicatorId);
+        isButtonDisable = false;
+    }
+
+    private void Search()
+    {
+
+    }
+
+    private async Task AddNewSampleIndicatorAsync()
+    {
+        var response = await Mediator.Send(new AddSampleIndicatorRequest(InputModel));
+        if (response.Status != -1)
+        {
+            Logger.LogInformation($"Sample indicator {InputModel.Name} added.");
+            ResetForm();
+            isButtonDisable = true;
+            ToastService.ShowToast($"Indicator {InputModel.Name} saved successfully.", ToastLevel.Info);
+        }
+        else
+        {
+            Logger.LogInformation($"Indicator {InputModel.Name} already exists. Check indicator name and try again!");
+            ToastService.ShowToast($"Indicator {InputModel.Name} already exists. Check indicator name and try again!", ToastLevel.Error);
+        }
+    }
+
+    private void ResetForm()
+    {
+        InputModel = new();
+        bearingModel = new();
+    }
+
+}

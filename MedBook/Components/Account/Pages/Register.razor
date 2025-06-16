@@ -1,0 +1,262 @@
+﻿@page "/Account/Register"
+
+@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using System.Text
+@using System.Text.Encodings.Web
+@using DAL.Enum
+@using DAL.Data
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.EntityFrameworkCore
+
+@inject UserManager<ApplicationUser> UserManager
+@inject IUserStore<ApplicationUser> UserStore
+@inject SignInManager<ApplicationUser> SignInManager
+@inject IEmailSender<ApplicationUser> EmailSender
+@inject ILogger<Register> Logger
+@inject NavigationManager NavigationManager
+@inject IdentityRedirectManager RedirectManager
+@inject RoleManager<IdentityRole> RoleManager
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+
+@implements IDisposable
+
+<PageTitle>Register</PageTitle>
+
+<div class="row">
+    <div class="col-md-4">
+        <StatusMessage Message="@Message" />
+        <EditForm Model="Input" asp-route-returnUrl="@ReturnUrl" method="post" OnValidSubmit="RegisterUser" FormName="register">
+            <DataAnnotationsValidator />
+            <h2>Create a new account.</h2>
+            <hr />
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="form-floating mb-3">
+                <InputText id="firstname" @bind-value="Input.FirstName" class="form-control" aria-required="true" placeholder="First Name" />
+                <label for="firstname" class="form-label">First name</label>
+                <ValidationMessage For="() => Input.FirstName" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText id="lastname" @bind-value="Input.LastName" class="form-control" aria-required="true" placeholder="Last Name" />
+                <label for="lastname">Last name</label>
+                <ValidationMessage For="() => Input.LastName" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputSelect id="role" @bind-Value="Input.Role" class="form-select" aria-required="true" placeholder="Select role">
+                    <option value=@Roles.Doctor>Doctor</option>
+                    <option value=@Roles.Patient>Patient</option>
+                </InputSelect>
+                <label for="role">Role</label>
+                <ValidationMessage For="() => Input.Role" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputDate @bind-value="Input.DateOfBirth" class="form-control" aria-required="true" />
+                <label for="dateofbirth">Date of Birth</label>
+                <ValidationMessage For="() => Input.DateOfBirth" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputSelect id="gender" @bind-Value="Input.Gender" class="form-select" aria-required="true" placeholder="Select gender">
+                    <option value=@Gender.Male>Male</option>
+                    <option value=@Gender.Female>Female</option>
+                </InputSelect>
+                <label for="gender">Gender</label>
+                <ValidationMessage For="() => Input.Gender" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText @bind-Value="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                <label for="email">Email</label>
+                <ValidationMessage For="() => Input.Email" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText type="password" @bind-Value="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <label for="password">Password</label>
+                <ValidationMessage For="() => Input.Password" class="text-danger" />
+            </div>
+            <div class="form-floating mb-3">
+                <InputText type="password" @bind-Value="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <label for="confirm-password">Confirm Password</label>
+                <ValidationMessage For="() => Input.ConfirmPassword" class="text-danger" />
+            </div>
+            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    private IEnumerable<IdentityError>? identityErrors;
+
+    private ApplicationDbContext? dbContext { get; set; }
+
+    [SupplyParameterFromForm]
+    private InputModel Input { get; set; } = new();
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
+
+    protected override Task OnInitializedAsync()
+    {
+        dbContext = DbFactory.CreateDbContext();
+        return base.OnInitializedAsync();
+    }
+
+    public async Task RegisterUser()
+    {
+        var user = await CreateUserAsync();
+
+        await UserStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
+        var emailStore = GetEmailStore();
+        await emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+        var result = await UserManager.CreateAsync(user, Input.Password);
+
+        if (result.Succeeded)
+        {
+            var claims = new Claim[]
+            {
+                new Claim("FullName", string.Concat(Input.FirstName, " ", Input.LastName)),
+            };
+
+            await UserManager.AddClaimsAsync(user, claims);
+        }
+        else
+        {
+            identityErrors = result.Errors;
+            return;
+        }
+        
+        var addedToRole = await UserManager.AddToRoleAsync(user, Input.Role.ToString());
+        if (result.Succeeded)
+        {
+            var claims = new Claim[]
+            {
+                new Claim("Role", Input.Role.ToString()),
+            };
+
+            await UserManager.AddClaimsAsync(user, claims);
+        }
+        else
+        {
+            identityErrors = result.Errors;
+            return;
+        }
+
+
+        Logger.LogInformation("User created a new account with password.");
+
+        var userId = await UserManager.GetUserIdAsync(user);
+        var code = await UserManager.GenerateEmailConfirmationTokenAsync(user);
+        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+        var callbackUrl = NavigationManager.GetUriWithQueryParameters(
+            NavigationManager.ToAbsoluteUri("Account/ConfirmEmail").AbsoluteUri,
+            new Dictionary<string, object?> { ["userId"] = userId, ["code"] = code, ["returnUrl"] = ReturnUrl });
+
+        await EmailSender.SendConfirmationLinkAsync(user, Input.Email, HtmlEncoder.Default.Encode(callbackUrl));
+
+        if (UserManager.Options.SignIn.RequireConfirmedAccount)
+        {
+            RedirectManager.RedirectTo(
+                "Account/RegisterConfirmation",
+                new() { ["email"] = Input.Email, ["returnUrl"] = ReturnUrl });
+        }
+
+        await SignInManager.SignInAsync(user, isPersistent: false);
+        RedirectManager.RedirectTo(ReturnUrl);
+    }
+
+    public void Dispose()
+    {
+        dbContext?.Dispose();
+    }
+
+    private async Task<ApplicationUser> CreateUserAsync()
+    {
+        var roles = RoleManager.Roles.ToArray();
+        if (!roles.Any(x => x.Name == Input.Role.ToString()))
+        {
+            await CreateRole(Input.Role);
+        }
+        try
+        {
+            if (Input.Role == Roles.Patient)
+            {
+                var patient = Activator.CreateInstance<Patient>();
+                patient.FirstName = Input.FirstName ?? string.Empty;
+                patient.LastName = Input.LastName ?? string.Empty;
+                patient.Gender = Input.Gender;
+                patient.DateOfBirth = Input.DateOfBirth;
+                patient.Age = DateTime.Today.Year - Input.DateOfBirth.Year;
+
+                return patient;
+            }
+            else
+            {
+                var doctor = Activator.CreateInstance<Doctor>();
+                doctor.FirstName = Input.FirstName ?? string.Empty;
+                doctor.LastName = Input.LastName ?? string.Empty;
+
+                return doctor;
+            }
+        }
+        catch
+        {
+            throw new InvalidOperationException($"Can't create an instance of '{nameof(ApplicationUser)}'. " +
+                $"Ensure that '{nameof(ApplicationUser)}' is not an abstract class and has a parameterless constructor.");
+        }
+    }
+
+    private IUserEmailStore<ApplicationUser> GetEmailStore()
+    {
+        if (!UserManager.SupportsUserEmail)
+        {
+            throw new NotSupportedException("The default UI requires a user store with email support.");
+        }
+        return (IUserEmailStore<ApplicationUser>)UserStore;
+    }
+
+    private async Task CreateRole(Roles role)
+    {
+        var result = await RoleManager.CreateAsync(new IdentityRole(role.ToString()));
+    }
+
+    private sealed class InputModel
+    {
+        [Required]
+        [EmailAddress]
+        [Display(Name = "Email")]
+        public string Email { get; set; } = "";
+
+        [Required]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        [Display(Name = "Password")]
+        public string Password { get; set; } = "";
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Confirm password")]
+        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; } = "";
+
+        [Required]
+        [Display(Name = "First Name")]
+        public string FirstName { get; set; }
+
+        [Required]
+        [Display(Name = "Last Name")]
+        public string LastName { get; set; }
+
+        [Required]
+        [DataType(DataType.Date)]
+        [Display(Name = "Date of birth")]
+        public DateTime DateOfBirth { get; set; } = DateTime.Now.Date;
+
+        [Required]
+        [Display(Name = "Gender")]
+        public Gender Gender { get; set; }
+
+        [Required]
+        [Display(Name = "Role")]
+        public Roles Role { get; set; } = Roles.Doctor;
+    }
+}
