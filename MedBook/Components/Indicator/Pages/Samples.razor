@@ -109,6 +109,11 @@
     private void FillIndicatorParameters()
     {
         bearingModel = bearingIndicators.FirstOrDefault(x => x.Id == InputModel.BearingIndicatorId);
+        if (bearingModel is null)
+        {
+            throw new ArgumentNullException(nameof(bearingModel), $"Bearing indicator Id {InputModel.BearingIndicatorId} not found.");
+        }
+
         isButtonDisable = false;
     }
 
