@@ -1,0 +1,12 @@
+﻿@using Business.DTO
+<h3>DeleteModal</h3>
+
+@code {
+    [Parameter]
+    public EventCallback<SampleIndicatorDto> DeleteSampleIndicator { get; set; }
+
+    public void Show(SampleIndicatorDto indicatorDto)
+    {
+        StateHasChanged();
+    }
+}

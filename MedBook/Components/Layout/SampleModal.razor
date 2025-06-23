@@ -26,10 +26,7 @@
                             <label>Type</label>
                         </div>
                         <div class="col-md-8">
-                            <InputSelect id="type" @bind-Value="InputModel.Type" @bind-Value:after="IsDigitalValue" disabled="@isTypeBlocked" class="form-select" aria-required="true" placeholder="Select type">
-                                <option value=@(IndTYPE.VALUE) disabled="@(InputModel.Type == IndTYPE.VALUE)">Digital value</option>
-                                <option value=@(IndTYPE.YESNO) disabled="@(InputModel.Type == IndTYPE.YESNO)">YES/NO</option>
-                            </InputSelect>
+                            <label>@(InputModel.Type == IndTYPE.VALUE ? "Digital value" : "YES/NO")</label>
                         </div>
                     </div>
                     <hr />
@@ -56,6 +53,22 @@
                         InputModel.ReferenceMax = null;
                         InputModel.Unit = null;
                     }
+                    <div class="row">
+                        <div class="col-md-4" style="text-align:right">
+                            <label>Bearing</label>
+                        </div>
+                        <div class="col-md-8">
+                            <InputSelect id="type" @bind-Value="InputModel.BearingIndicatorId" @bind-Value:after="FillIndicatorParameters" class="form-select" aria-required="true" placeholder="Select bearing">
+                                <option value=null selected disabled>Select bearing indicator</option>
+                                @foreach (var bi in BearingIndicatorDtos)
+                                {
+                                    <option value=@bi.Id>@bi.Name</option>
+                                }
+                            </InputSelect>
+                            <label for="bearing">Bearing indicator</label>
+                            <ValidationMessage For="() => InputModel.BearingIndicatorId" class="text-danger" />
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => showModal = false">Close</button>
@@ -71,36 +84,41 @@
     public string Header { get; set; } = string.Empty;
 
     [Parameter]
-    public EventCallback<BearingIndicatorDto> UpdateBearingIndicator { get; set; }
+    public List<BearingIndicatorDto> BearingIndicatorDtos { get; set; }
 
-    private BearingIndicatorDto InputModel { get; set; } = new();
+    [Parameter]
+    public EventCallback<SampleIndicatorDto> EditSampleIndicator { get; set; }
+
+    private SampleIndicatorDto InputModel { get; set; } = new();
 
     private bool showModal;
 
     private bool isDigitalIndicator;
 
-    private bool isTypeBlocked;
-
-
-    public void Show(BearingIndicatorDto indicatorDto, bool isTypeBlocked)
+    public void Show(SampleIndicatorDto indicatorDto)
     {
         InputModel = indicatorDto;
         showModal = true;
         isDigitalIndicator = indicatorDto.Type == IndTYPE.VALUE ? true : false;
-        this.isTypeBlocked = isTypeBlocked;
         StateHasChanged();
     }
 
-    private void IsDigitalValue()
-    {
-        isDigitalIndicator = InputModel.Type == IndTYPE.VALUE ? true : false;
-        Console.WriteLine($"Selected type = {InputModel.Type.ToString()}");
-        StateHasChanged();
-    }
+    private void IsDigitalValue() => isDigitalIndicator = InputModel.Type == IndTYPE.VALUE ? true : false;
 
-    private async Task OnUpdateBearingIndicator(BearingIndicatorDto indicatorDto)
+    private async Task OnUpdateBearingIndicator(SampleIndicatorDto indicatorDto)
     {
         showModal = false;
-        await UpdateBearingIndicator.InvokeAsync(indicatorDto);
+        await EditSampleIndicator.InvokeAsync(indicatorDto);
+    }
+
+    private void FillIndicatorParameters()
+    {
+        var bearing = BearingIndicatorDtos.FirstOrDefault(bi => bi.Id == InputModel.BearingIndicatorId);
+        if (bearing != null)
+        {
+            InputModel.Unit = bearing.Unit;
+            InputModel.ReferenceMax = bearing.ReferenceMax;
+            InputModel.ReferenceMin = bearing.ReferenceMin;
+        }
     }
 }
