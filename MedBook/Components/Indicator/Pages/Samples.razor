@@ -9,6 +9,7 @@
 @using DAL.Enum
 @using MedBook.Requests
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.QuickGrid
 @using Microsoft.EntityFrameworkCore
 @using AutoMapper
 @using MedBook.Components.Layout
@@ -22,11 +23,14 @@
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject IMapper Mapper
 @inject ILogger<Samples> Logger
-@inject NavigationManager NavigationManager
 
 <PageTitle>Sample Indicator</PageTitle>
 
 <Toast />
+
+<SampleModal @ref="sampleModal" EditSampleIndicator="UpdateSampleIndicator" BearingIndicatorDtos="bearingIndicators" Header="Edit sample indicator" />
+
+<DeleteModal @ref="deleteModal" DeleteSampleIndicator="DeleteSampleIndicator" Header="Delete sample indicator" />
 
 <div class="row">
     <div class="col-md-4">
@@ -70,8 +74,53 @@
             <button type="submit" class="w-100 btn btn-lg btn-primary" disabled="@isButtonDisable">Add indicator</button>
         </EditForm>
     </div>
-    <div class="col-md-4">
-        <Search />
+    <div class="col-md-8">
+        <QuickGrid Class="table table-striped m-0" Items="sampleIndicators.AsQueryable()" Pagination="pagination">
+            <PropertyColumn Property="@(si => si.Name)" Title="Name" Sortable="true" IsDefaultSortColumn InitialSortDirection="SortDirection.Ascending">
+                <ColumnOptions>
+                    <div class="search-box">
+                        <input type="search" autofocus @bind="nameFilter" placeholder="Indicator name" @bind:event="oninput" />
+                    </div>
+                </ColumnOptions>
+            </PropertyColumn>
+            <TemplateColumn Title="Reference Min" Align="Align.Center">
+                @if (context.ReferenceMin is not null)
+                {
+                    <span>@context.ReferenceMin</span>
+                }
+                else
+                {
+                    <span>-</span>
+                }
+            </TemplateColumn>
+            <TemplateColumn Title="Reference Max" Align="Align.Center">
+                @if (context.ReferenceMax is not null)
+                {
+                    <span>@context.ReferenceMax</span>
+                }
+                else
+                {
+                    <span>-</span>
+                }
+            </TemplateColumn>
+            <TemplateColumn Title="Unit" Align="Align.Center">
+                @if (context.Unit is not null)
+                {
+                    <span>@context.Unit</span>
+                }
+                else
+                {
+                    <span>Yes/No</span>
+                }
+            </TemplateColumn>
+            <TemplateColumn>
+                <button type="button" @onclick="async () => await OnEditIndicator(context)" class="btn btn-outline-primary">Edit</button>
+            </TemplateColumn>
+            <TemplateColumn>
+                <button type="button" @onclick="async () => await OnDeleteIndicator(context)" class="btn btn-outline-danger">Delete</button>
+            </TemplateColumn>
+        </QuickGrid>
+        <Paginator State="pagination" />
     </div>
 </div>
 
@@ -82,20 +131,26 @@
     [SupplyParameterFromForm]
     private SampleIndicatorDto InputModel { get; set; } = new();
 
-    private BearingIndicatorDto bearingModel = new();
-
     private string SearchValue = string.Empty;
 
-    private string userRole = string.Empty;
+    private BearingIndicatorDto bearingModel = new();
 
     private bool isButtonDisable = true;
+
+    private SampleModal sampleModal { get; set; }
+
+    public DeleteModal deleteModal { get; set; }
+
+    PaginationState pagination = new PaginationState { ItemsPerPage = 15 };
+
+    private string nameFilter = string.Empty;
+
+    private List<BearingIndicatorDto> bearingIndicators = new();
 
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
-    private ApplicationDbContext Context { get; set; }
-
-    private List<BearingIndicatorDto> bearingIndicators = new();
+    private ApplicationDbContext? Context { get; set; }
 
     public void Dispose() => Context?.Dispose();
 
@@ -117,10 +172,20 @@
         isButtonDisable = false;
     }
 
-    private void Search()
-    {
+    private async Task OnEditIndicator(SampleIndicatorDto sampleIndicatorDto) => sampleModal.Show(sampleIndicatorDto);
 
-    }
+    private async Task OnDeleteIndicator(SampleIndicatorDto sampleIndicatorDto) => deleteModal.Show(sampleIndicatorDto);
+
+    private List<SampleIndicatorDto> sampleIndicators => string.IsNullOrEmpty(SearchValue) ?
+           Context.SampleIndicators
+               .AsNoTracking()
+               .ProjectTo<SampleIndicatorDto>(Mapper.ConfigurationProvider)
+               .ToList() :
+           Context.SampleIndicators
+               .AsNoTracking()
+               .Where(si => si.Name.Contains(SearchValue, StringComparison.OrdinalIgnoreCase))
+               .ProjectTo<SampleIndicatorDto>(Mapper.ConfigurationProvider)
+               .ToList();
 
     private async Task AddNewSampleIndicatorAsync()
     {
@@ -142,7 +207,15 @@
     private void ResetForm()
     {
         InputModel = new();
-        bearingModel = new();
     }
 
+    private void UpdateSampleIndicator(SampleIndicatorDto args)
+    {
+        throw new NotImplementedException();
+    }
+
+    private void DeleteSampleIndicator(SampleIndicatorDto args)
+    {
+        throw new NotImplementedException();
+    }
 }
