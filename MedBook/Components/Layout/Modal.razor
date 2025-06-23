@@ -26,9 +26,9 @@
                             <label>Type</label>
                         </div>
                         <div class="col-md-8">
-                            <InputSelect id="type" @bind-Value="InputModel.Type" @bind-Value:after="IsDigitalValue" class="form-select" aria-required="true" placeholder="Select type">
-                                <option value=@InputModel.Type selected disabled>@(InputModel.Type == IndTYPE.VALUE ? "Digital value" : "YES/NO")</option>
-                                <option value=@(InputModel.Type == IndTYPE.VALUE ? IndTYPE.YESNO : IndTYPE.VALUE)>@(InputModel.Type == IndTYPE.VALUE ? "YES/NO" : "Digital value")</option>
+                            <InputSelect id="type" @bind-Value="InputModel.Type" @bind-Value:after="IsDigitalValue" disabled="@isTypeBlocked" class="form-select" aria-required="true" placeholder="Select type">
+                                <option value=@(IndTYPE.VALUE) disabled="@(InputModel.Type == IndTYPE.VALUE)">Digital value</option>
+                                <option value=@(IndTYPE.YESNO) disabled="@(InputModel.Type == IndTYPE.YESNO)">YES/NO</option>
                             </InputSelect>
                         </div>
                     </div>
@@ -82,15 +82,24 @@
 
     private bool isDigitalIndicator;
 
-    public void Show(BearingIndicatorDto indicatorDto)
+    private bool isTypeBlocked;
+
+
+    public void Show(BearingIndicatorDto indicatorDto, bool isTypeBlocked)
     {
         InputModel = indicatorDto;
         showModal = true;
         isDigitalIndicator = indicatorDto.Type == IndTYPE.VALUE ? true : false;
+        this.isTypeBlocked = isTypeBlocked;
         StateHasChanged();
     }
 
-    private void IsDigitalValue() => isDigitalIndicator = InputModel.Type == IndTYPE.VALUE ? true : false;
+    private void IsDigitalValue()
+    {
+        isDigitalIndicator = InputModel.Type == IndTYPE.VALUE ? true : false;
+        Console.WriteLine($"Selected type = {InputModel.Type.ToString()}");
+        StateHasChanged();
+    }
 
     private async Task OnUpdateBearingIndicator(BearingIndicatorDto indicatorDto)
     {

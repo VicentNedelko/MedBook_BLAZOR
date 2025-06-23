@@ -28,7 +28,7 @@
 
 <Toast />
 
-<Modal @ref="modal" UpdateBearingIndicator="UpdateBearingIndicator"/>
+<Modal @ref="modal" UpdateBearingIndicator="UpdateBearingIndicator" />
 
 <div class="row">
     <div class="col-md-4">
@@ -97,7 +97,7 @@
                 }
             </TemplateColumn>
             <TemplateColumn Title="Reference Max" Align="Align.Center">
-                @if(context.ReferenceMax is not null)
+                @if (context.ReferenceMax is not null)
                 {
                     <span>@context.ReferenceMax</span>
                 }
@@ -118,7 +118,7 @@
             </TemplateColumn>
             <PropertyColumn Property="@(bi => bi.Description)" Title="Description" />
             <TemplateColumn>
-                <button type="button" @onclick="async() => await OnEditIndicator(context)" class="btn btn-outline-primary">Edit</button>
+                <button type="button" @onclick="async () => await OnEditIndicator(context)" class="btn btn-outline-primary">Edit</button>
             </TemplateColumn>
         </QuickGrid>
         <Paginator State="pagination" />
@@ -162,7 +162,11 @@
 
     public async ValueTask DisposeAsync() => await context.DisposeAsync();
 
-    private async Task OnEditIndicator(BearingIndicatorDto bearingIndicatorDto) => modal.Show(bearingIndicatorDto);
+    private async Task OnEditIndicator(BearingIndicatorDto bearingIndicatorDto)
+    {
+        var isTypeBlocked = context.SampleIndicators.Any(x => x.BearingIndicatorId == bearingIndicatorDto.Id);
+        modal.Show(bearingIndicatorDto, isTypeBlocked);
+    }
 
     private IList<BearingIndicatorDto> bearingIndicators => string.IsNullOrEmpty(nameFilter) ?
                                                                     context.BearingIndicators

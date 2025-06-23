@@ -2,6 +2,7 @@
 using DAL.Data;
 using MedBook.Requests;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace MedBook.Handlers
 {
@@ -17,10 +18,10 @@ namespace MedBook.Handlers
                 throw new InvalidOperationException("Database context is not initialized.");
             }
 
-            var isExists = context.SampleIndicators.FirstOrDefault(x => x.Name.ToUpper() == request.SampleIndicatorDto.Name.ToUpper());
+            var isExists = await context.SampleIndicators.AsNoTracking().FirstOrDefaultAsync(x => x.Name.ToUpper() == request.SampleIndicatorDto.Name.ToUpper());
             if (isExists is null)
             {
-                var bearingIndicator = context.BearingIndicators.FirstOrDefault(x => x.Id == request.SampleIndicatorDto.BearingIndicatorId);
+                var bearingIndicator = await context.BearingIndicators.FirstOrDefaultAsync(x => x.Id == request.SampleIndicatorDto.BearingIndicatorId);
                 if (bearingIndicator is not null)
                 {
                     var sampleIndicator = CreateIndicator(request, bearingIndicator);
