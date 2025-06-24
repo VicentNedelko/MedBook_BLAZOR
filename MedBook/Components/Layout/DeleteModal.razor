@@ -3,6 +3,9 @@
 
 @code {
     [Parameter]
+    public string Header { get; set; } = string.Empty;
+
+    [Parameter]
     public EventCallback<SampleIndicatorDto> DeleteSampleIndicator { get; set; }
 
     public void Show(SampleIndicatorDto indicatorDto)

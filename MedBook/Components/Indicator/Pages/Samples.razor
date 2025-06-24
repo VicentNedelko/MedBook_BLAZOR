@@ -154,11 +154,11 @@
 
     public void Dispose() => Context?.Dispose();
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        Context = await DbFactory.CreateDbContextAsync();
+        Context = DbFactory.CreateDbContext();
 
-        bearingIndicators = await Context.BearingIndicators.ProjectTo<BearingIndicatorDto>(Mapper.ConfigurationProvider).ToListAsync();
+        bearingIndicators = Context.BearingIndicators.ProjectTo<BearingIndicatorDto>(Mapper.ConfigurationProvider).ToList();
     }
 
     private void FillIndicatorParameters()
