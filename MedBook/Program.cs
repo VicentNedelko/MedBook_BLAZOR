@@ -9,6 +9,7 @@ using MedBook.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using MudBlazor.Services;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,11 +23,15 @@ builder.Services.AddScoped<IdentityUserAccessor>();
 builder.Services.AddScoped<IdentityRedirectManager>();
 builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuthenticationStateProvider>();
 
+builder.Services.AddMudServices();
+
+#if DEBUG
+builder.WebHost.UseStaticWebAssets();
+#endif
+
 builder.Services.AddScoped<ToastService>();
 builder.Services.AddScoped<PdfParser>();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
-
-builder.Services.AddQuickGridEntityFrameworkAdapter();
 
 var mapperConfiguration = new MapperConfiguration(configuration =>
 {

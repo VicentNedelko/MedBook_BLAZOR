@@ -79,14 +79,14 @@
     </div>
     <div class="col-md-8">
         <QuickGrid Class="table table-striped m-0" Items="bearingIndicators.AsQueryable()" Pagination="pagination">
-            <PropertyColumn Property="@(bi => bi.Name)" Title="Name" Sortable="true" IsDefaultSortColumn InitialSortDirection="SortDirection.Ascending">
+            <Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn Property="@(bi => bi.Name)" Title="Name" Sortable="true" IsDefaultSortColumn InitialSortDirection="Microsoft.AspNetCore.Components.QuickGrid.SortDirection.Ascending">
                 <ColumnOptions>
                     <div class="search-box">
                         <input type="search" autofocus @bind="nameFilter" placeholder="Indicator name" @bind:event="oninput" />
                     </div>
                 </ColumnOptions>
-            </PropertyColumn>
-            <TemplateColumn Title="Reference Min" Align="Align.Center">
+            </Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn>
+            <Microsoft.AspNetCore.Components.QuickGrid.TemplateColumn Title="Reference Min" Align="Microsoft.AspNetCore.Components.QuickGrid.Align.Center">
                 @if (context.ReferenceMin is not null)
                 {
                     <span>@context.ReferenceMin</span>
@@ -95,8 +95,8 @@
                 {
                     <span>-</span>
                 }
-            </TemplateColumn>
-            <TemplateColumn Title="Reference Max" Align="Align.Center">
+            </Microsoft.AspNetCore.Components.QuickGrid.TemplateColumn>
+            <Microsoft.AspNetCore.Components.QuickGrid.TemplateColumn Title="Reference Max" Align="Microsoft.AspNetCore.Components.QuickGrid.Align.Center">
                 @if (context.ReferenceMax is not null)
                 {
                     <span>@context.ReferenceMax</span>
@@ -105,8 +105,8 @@
                 {
                     <span>-</span>
                 }
-            </TemplateColumn>
-            <TemplateColumn Title="Unit" Align="Align.Center">
+            </Microsoft.AspNetCore.Components.QuickGrid.TemplateColumn>
+            <Microsoft.AspNetCore.Components.QuickGrid.TemplateColumn Title="Unit" Align="Microsoft.AspNetCore.Components.QuickGrid.Align.Center">
                 @if (context.Unit is not null)
                 {
                     <span>@context.Unit</span>
@@ -115,11 +115,11 @@
                 {
                     <span>Yes/No</span>
                 }
-            </TemplateColumn>
-            <PropertyColumn Property="@(bi => bi.Description)" Title="Description" />
-            <TemplateColumn>
+            </Microsoft.AspNetCore.Components.QuickGrid.TemplateColumn>
+            <Microsoft.AspNetCore.Components.QuickGrid.PropertyColumn Property="@(bi => bi.Description)" Title="Description" />
+            <Microsoft.AspNetCore.Components.QuickGrid.TemplateColumn>
                 <button type="button" @onclick="async () => await OnEditIndicator(context)" class="btn btn-outline-primary">Edit</button>
-            </TemplateColumn>
+            </Microsoft.AspNetCore.Components.QuickGrid.TemplateColumn>
         </QuickGrid>
         <Paginator State="pagination" />
     </div>

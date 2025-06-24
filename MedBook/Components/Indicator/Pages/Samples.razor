@@ -9,7 +9,6 @@
 @using DAL.Enum
 @using MedBook.Requests
 @using Microsoft.AspNetCore.Authorization
-@using Microsoft.AspNetCore.Components.QuickGrid
 @using Microsoft.EntityFrameworkCore
 @using AutoMapper
 @using MedBook.Components.Layout
@@ -24,6 +23,8 @@
 @inject IMapper Mapper
 @inject ILogger<Samples> Logger
 
+<MudPopoverProvider />
+<MudDialogProvider />
 <PageTitle>Sample Indicator</PageTitle>
 
 <Toast />
@@ -39,88 +40,66 @@
             <h2>Create a new sample indicator.</h2>
             <hr />
             <ValidationSummary class="text-danger" role="alert" />
-            <div class="form-floating mb-3">
-                <InputText id="name" @bind-value="InputModel.Name" class="form-control" aria-required="true" />
-                <label for="name">Name</label>
-                <ValidationMessage For="() => InputModel.Name" class="text-danger" />
-            </div>
-            <div class="form-floating mb-3">
-                <InputSelect id="type" @bind-Value="InputModel.BearingIndicatorId" @bind-Value:after="FillIndicatorParameters" class="form-select" aria-required="true" placeholder="Select bearing">
-                    <option value=null selected disabled>Select bearing indicator</option>
-                    @foreach (var bi in bearingIndicators)
-                    {
-                        <option value=@bi.Id>@bi.Name</option>
-                    }
-                </InputSelect>
-                <label for="bearing">Bearing indicator</label>
-                <ValidationMessage For="() => InputModel.BearingIndicatorId" class="text-danger" />
-            </div>
-            <div class="form-floating mb-3">
-                <InputText id="name" @bind-value="bearingModel.Unit" class="form-control" disabled="true" />
-                <label for="name">Unit</label>
-            </div>
-            <div class="form-floating mb-3">
-                <InputNumber id="name" @bind-value="bearingModel.ReferenceMax" class="form-control" disabled="true" />
-                <label for="name">Reference MAX</label>
-            </div>
-            <div class="form-floating mb-3">
-                <InputNumber id="name" @bind-value="bearingModel.ReferenceMin" class="form-control" disabled="true" />
-                <label for="name">Reference MIN</label>
-            </div>
-            <div class="form-floating mb-3">
-                <InputText id="name" @bind-value="bearingModel.Description" class="form-control" disabled="true" />
-                <label for="name">Description</label>
-            </div>
+            <MudTextField id="name" @bind-value="InputModel.Name" class="form-control" aria-required="true" Label="Name" />
+            <ValidationMessage For="() => InputModel.Name" class="text-danger" />
+            <MudSelect @bind-Value="InputModel.BearingIndicatorId"
+                       @bind-Value:after="FillIndicatorParameters"
+                       Placeholder="Bearings"
+                       Margin="Margin.Normal">
+                <MudSelectItem Disabled Value="0">Select bearing</MudSelectItem>
+                @foreach (var bi in bearingIndicators)
+                {
+                    <MudSelectItem Value="@bi.Id">@bi.Name</MudSelectItem>
+                }
+
+            </MudSelect>
+            <ValidationMessage For="() => InputModel.BearingIndicatorId" class="text-danger" />
+            <MudTextField id="name" @bind-value="bearingModel.Unit" class="form-control" disabled="true" Label="Unit" />
+            <MudNumericField id="name" @bind-value="bearingModel.ReferenceMax" class="form-control" disabled="true" Label="Reference Max" />
+            <MudNumericField id="name" @bind-value="bearingModel.ReferenceMin" class="form-control" disabled="true" Label="Reference Min" />
+            <MudTextField id="name" @bind-value="bearingModel.Description" class="form-control" disabled="true" Label="Description" />
             <button type="submit" class="w-100 btn btn-lg btn-primary" disabled="@isButtonDisable">Add indicator</button>
         </EditForm>
     </div>
     <div class="col-md-8">
-        <QuickGrid Class="table table-striped m-0" Items="sampleIndicators.AsQueryable()" Pagination="pagination">
-            <PropertyColumn Property="@(si => si.Name)" Title="Name" Sortable="true" IsDefaultSortColumn InitialSortDirection="SortDirection.Ascending">
-                <ColumnOptions>
-                    <div class="search-box">
-                        <input type="search" autofocus @bind="nameFilter" placeholder="Indicator name" @bind:event="oninput" />
-                    </div>
-                </ColumnOptions>
-            </PropertyColumn>
-            <TemplateColumn Title="Reference Min" Align="Align.Center">
-                @if (context.ReferenceMin is not null)
-                {
-                    <span>@context.ReferenceMin</span>
-                }
-                else
-                {
-                    <span>-</span>
-                }
-            </TemplateColumn>
-            <TemplateColumn Title="Reference Max" Align="Align.Center">
-                @if (context.ReferenceMax is not null)
-                {
-                    <span>@context.ReferenceMax</span>
-                }
-                else
-                {
-                    <span>-</span>
-                }
-            </TemplateColumn>
-            <TemplateColumn Title="Unit" Align="Align.Center">
-                @if (context.Unit is not null)
-                {
-                    <span>@context.Unit</span>
-                }
-                else
-                {
-                    <span>Yes/No</span>
-                }
-            </TemplateColumn>
-            <TemplateColumn>
-                <button type="button" @onclick="async () => await OnEditIndicator(context)" class="btn btn-outline-primary">Edit</button>
-            </TemplateColumn>
-            <TemplateColumn>
-                <button type="button" @onclick="async () => await OnDeleteIndicator(context)" class="btn btn-outline-danger">Delete</button>
-            </TemplateColumn>
-        </QuickGrid>
-        <Paginator State="pagination" />
+        @if (bearingIndicators == null)
+        {
+            <MudOverlay Visible="true" DarkBackground="true" AutoClose="false" />
+        }
+        else
+        {
+            <MudDataGrid T="SampleIndicatorDto" Items="@sampleIndicators" Filterable="true" SortMode="@SortMode.Single" Groupable="false" QuickFilter="quickSampleFilter" 
+            ReadOnly="false" EditMode="DataGridEditMode.Form" StartedEditingItem="@StartedEditingItem" EditTrigger="DataGridEditTrigger.Manual">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Sample indicators</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="searchSample" Placeholder="Search" Adornment="Adornment.Start" Immediate="true"
+                                  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                </ToolBarContent>
+                <Columns>
+                    <MudBlazor.PropertyColumn Property="x => x.Name" Editable="true"/>
+                    <MudBlazor.PropertyColumn Property="@(x => x.Type == IndTYPE.VALUE ? "Value" : "YES/NO")" Title="Type" Editable="true">
+                        <EditTemplate>
+                            <MudSelect @bind-Value="context.Item.Type" Required RequiredError="You must select a Type!" Margin="@Margin.Dense">
+                                <MudSelectItem Value="@IndTYPE.VALUE">Value</MudSelectItem>
+                                <MudSelectItem Value="@IndTYPE.YESNO">YES/NO</MudSelectItem>
+                            </MudSelect>
+                        </EditTemplate>
+                    </MudBlazor.PropertyColumn>
+                    <MudBlazor.PropertyColumn Property="x => x.ReferenceMin" Title="Reference Min" Editable="false"/>
+                    <MudBlazor.PropertyColumn Property="x => x.ReferenceMax" Title="Reference Max" Editable="false"/>
+                    <MudBlazor.PropertyColumn Property="x => x.Unit" Title="Unit" Editable="false"/>
+                    <TemplateColumn StickyRight="true">
+                        <CellTemplate>
+                            <MudIconButton Icon="@Icons.Material.Outlined.Edit" Size="@Size.Small" OnClick="@context.Actions.StartEditingItemAsync" />
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+                <PagerContent>
+                    <MudDataGridPager T="SampleIndicatorDto" />
+                </PagerContent>
+            </MudDataGrid>
+        }
     </div>
 </div>
 
@@ -141,11 +120,9 @@
 
     public DeleteModal deleteModal { get; set; }
 
-    PaginationState pagination = new PaginationState { ItemsPerPage = 15 };
+    private string searchSample = string.Empty;
 
-    private string nameFilter = string.Empty;
-
-    private List<BearingIndicatorDto> bearingIndicators = new();
+    private List<BearingIndicatorDto> bearingIndicators;
 
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
@@ -172,9 +149,10 @@
         isButtonDisable = false;
     }
 
-    private async Task OnEditIndicator(SampleIndicatorDto sampleIndicatorDto) => sampleModal.Show(sampleIndicatorDto);
-
-    private async Task OnDeleteIndicator(SampleIndicatorDto sampleIndicatorDto) => deleteModal.Show(sampleIndicatorDto);
+    private void StartedEditingItem(SampleIndicatorDto sampleIndicatorDto)
+    {
+        var item = sampleIndicatorDto;
+    }
 
     private List<SampleIndicatorDto> sampleIndicators => string.IsNullOrEmpty(SearchValue) ?
            Context.SampleIndicators
@@ -207,7 +185,17 @@
     private void ResetForm()
     {
         InputModel = new();
+        bearingModel = new();
+        isButtonDisable = true;
     }
+
+    private Func<SampleIndicatorDto, bool> quickSampleFilter => x =>
+    {
+        if (string.IsNullOrWhiteSpace(searchSample)) return true;
+        if (x.Name.Contains(searchSample, StringComparison.OrdinalIgnoreCase)) return true;
+
+        return false;
+    };
 
     private void UpdateSampleIndicator(SampleIndicatorDto args)
     {
