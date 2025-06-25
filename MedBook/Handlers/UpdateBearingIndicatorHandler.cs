@@ -4,12 +4,12 @@ using MediatR;
 
 namespace MedBook.Handlers
 {
-    public class UpdateBearingIndicatorHandler(ApplicationDbContext context) : IRequestHandler<UpdateBearingIndicatorRequest, UpdateBearingIndicatorRequest.Response>
+    public class UpdateBearingIndicatorHandler(ApplicationDbContext dbContext) : IRequestHandler<UpdateBearingIndicatorRequest, UpdateBearingIndicatorRequest.Response>
     {
-        private readonly ApplicationDbContext context = context;
+        private readonly ApplicationDbContext dbContext = dbContext;
         public async Task<UpdateBearingIndicatorRequest.Response> Handle(UpdateBearingIndicatorRequest request, CancellationToken cancellationToken)
         {
-            var indicator = context.BearingIndicators.SingleOrDefault(x => x.Id == request.BearingIndicatorDto.Id)
+            var indicator = dbContext.BearingIndicators.SingleOrDefault(x => x.Id == request.BearingIndicatorDto.Id)
                 ?? throw new ArgumentException($"Bearing indicator {request.BearingIndicatorDto.Name} {request.BearingIndicatorDto.Id} is not found in DB.");
             
             try
@@ -20,7 +20,7 @@ namespace MedBook.Handlers
                 indicator.Unit = request.BearingIndicatorDto.Unit;
                 indicator.Type = request.BearingIndicatorDto.Type;
 
-                var status = await context!.SaveChangesAsync(cancellationToken);
+                var status = await dbContext!.SaveChangesAsync(cancellationToken);
 
                 return new UpdateBearingIndicatorRequest.Response(status);
             }

@@ -221,12 +221,20 @@
         InputModel = new();
     }
 
-    private void UpdateSampleIndicator(SampleIndicatorDto args)
+    protected async Task UpdateSampleIndicator(SampleIndicatorDto sampleIndicatorDto)
     {
-        throw new NotImplementedException();
+        var response = await Mediator.Send(new UpdateSampleIndicatorRequest(sampleIndicatorDto));
+        if (response.Status != -1)
+        {
+            ToastService.ShowToast($"Indicator {sampleIndicatorDto.Name} updated successfully.", ToastLevel.Info);
+        }
+        else
+        {
+            ToastService.ShowToast($"Updates indicator {sampleIndicatorDto.Name} failed!", ToastLevel.Error);
+        }
     }
 
-    private void DeleteSampleIndicator(SampleIndicatorDto args)
+    protected void DeleteSampleIndicator(SampleIndicatorDto args)
     {
         throw new NotImplementedException();
     }
