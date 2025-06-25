@@ -1,6 +1,8 @@
 ﻿@using Business.DTO
 @using DAL.Enum
 
+@rendermode InteractiveServer
+
 <!-- Modal -->
 @if (showModal)
 {
@@ -37,15 +39,16 @@
                                 <label>Reference</label>
                             </div>
                             <div class="col-md-2">
-                                <InputNumber @bind-Value="InputModel!.ReferenceMin" class="form-control" aria-required="true" />
+                                <InputNumber @bind-Value="InputModel!.ReferenceMin" class="form-control" aria-required="true" disabled="true" />
                             </div>
                             <div class="col-md-2">
-                                <InputNumber @bind-Value="InputModel!.ReferenceMax" class="form-control" aria-required="true" />
+                                <InputNumber @bind-Value="InputModel!.ReferenceMax" class="form-control" aria-required="true" disabled="true" />
                             </div>
                             <div class="col-md-4">
-                                <InputText @bind-Value="InputModel!.Unit" class="form-control" aria-required="true" />
+                                <InputText @bind-Value="InputModel!.Unit" class="form-control" aria-required="true" disabled="true" />
                             </div>
                         </div>
+                        <hr />
                     }
                     else
                     {
@@ -65,14 +68,12 @@
                                     <option value=@bi.Id>@bi.Name</option>
                                 }
                             </InputSelect>
-                            <label for="bearing">Bearing indicator</label>
-                            <ValidationMessage For="() => InputModel.BearingIndicatorId" class="text-danger" />
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => showModal = false">Close</button>
-                    <button type="button" class="btn btn-primary" @onclick="async () => await OnUpdateBearingIndicator(InputModel)">Save changes</button>
+                    <button type="button" class="btn btn-primary" @onclick="async () => await OnUpdateSampleIndicator(InputModel)">Save changes</button>
                 </div>
             </div>
         </div>
@@ -105,7 +106,7 @@
 
     private void IsDigitalValue() => isDigitalIndicator = InputModel.Type == IndTYPE.VALUE ? true : false;
 
-    private async Task OnUpdateBearingIndicator(SampleIndicatorDto indicatorDto)
+    private async Task OnUpdateSampleIndicator(SampleIndicatorDto indicatorDto)
     {
         showModal = false;
         await EditSampleIndicator.InvokeAsync(indicatorDto);
