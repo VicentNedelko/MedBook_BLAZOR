@@ -49,6 +49,7 @@ namespace MedBook.Handlers
             sampleIndicator.ReferenceMax = bearingIndicator.ReferenceMax;
             sampleIndicator.ReferenceMin = bearingIndicator.ReferenceMin;
             sampleIndicator.Unit = bearingIndicator.Unit;
+            sampleIndicator.Type = bearingIndicator.Type;
 
             return sampleIndicator;
         }
