@@ -56,23 +56,19 @@
                 <div class="form-floating mb-3">
                     <InputNumber @bind-value="InputModel.ReferenceMax" class="form-control" aria-required="true" />
                     <label for="MAXReference">MIN Reference</label>
-                    <ValidationMessage For="() => InputModel.ReferenceMin" class="text-danger" />
                 </div>
                 <div class="form-floating mb-3">
                     <InputNumber @bind-Value="InputModel.ReferenceMin" class="form-control" aria-required="true" />
                     <label for="MINReference">MAX Reference</label>
-                    <ValidationMessage For="() => InputModel.ReferenceMax" class="text-danger" />
                 </div>
                 <div class="form-floating mb-3">
                     <InputText type="unit" @bind-Value="InputModel.Unit" class="form-control" aria-required="true" />
                     <label for="unit">Unit</label>
-                    <ValidationMessage For="() => InputModel.Unit" class="text-danger" />
                 </div>
             }
             <div class="form-floating mb-3">
                 <InputText type="description" @bind-Value="InputModel.Description" class="form-control" aria-required="true" />
                 <label for="description">Description</label>
-                <ValidationMessage For="() => InputModel.Description" class="text-danger" />
             </div>
             <button type="submit" class="w-100 btn btn-lg btn-primary" disabled="@isAddButtonBlocked">Add indicator</button>
         </EditForm>
