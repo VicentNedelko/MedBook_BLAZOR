@@ -14,7 +14,6 @@ namespace Business.DTO
 
         public IndTYPE Type { get; set; } // absolute, relative etc.
 
-        [GraterThen("ReferenceMin", ErrorMessage = "Value should be grater than MIN")]
         public double? ReferenceMax { get; set; }
 
         public double? ReferenceMin { get; set; }

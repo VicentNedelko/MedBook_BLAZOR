@@ -1,30 +1,41 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using DAL.Enum;
+using System.ComponentModel.DataAnnotations;
 
 namespace Business.Helpers
 {
-    public class GraterThen(string comparisonProperty) : ValidationAttribute
+    public class GraterThen(string comparisonProperty, string type) : ValidationAttribute
     {
         private readonly string comparisonProperty = comparisonProperty;
+        private readonly string type = type;
 
         protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
         {
-            ErrorMessage = ErrorMessageString;
-            var currentValue = (double)value;
-
-            var property = validationContext.ObjectType.GetProperty(comparisonProperty);
-            if (property is not null)
+            var actualType = validationContext.ObjectType.GetProperty(type);
+            var indType = actualType.PropertyType.GetEnumUnderlyingType();
+            var typeValue = Convert.ChangeType(actualType.GetValue(validationContext.ObjectInstance), indType);
+            if ((int)typeValue == 0)
             {
-                var comparisonValue = (double)property.GetValue(validationContext.ObjectInstance);
+                ErrorMessage = ErrorMessageString;
+                var currentValue = (double)value;
 
-                if (comparisonValue >= currentValue)
+                var property = validationContext.ObjectType.GetProperty(comparisonProperty);
+                if (property is not null)
                 {
-                    return new ValidationResult(ErrorMessage);
+                    var comparisonValue = (double)property.GetValue(validationContext.ObjectInstance);
+
+                    if (comparisonValue >= currentValue)
+                    {
+                        return new ValidationResult(ErrorMessage);
+                    }
+
+                    return ValidationResult.Success;
+
                 }
 
-                return ValidationResult.Success;
+                throw new ArgumentException("Property with this name not found");
             }
 
-            throw new ArgumentException("Property with this name not found");
+            return ValidationResult.Success;
         }
     }
 }
