@@ -54,12 +54,13 @@
             @if (isDigitalIndicator)
             {
                 <div class="form-floating mb-3">
-                    <InputNumber @bind-value="InputModel.ReferenceMax" class="form-control" aria-required="true" />
-                    <label for="MAXReference">MIN Reference</label>
+                    <InputNumber @bind-value="InputModel.ReferenceMin" class="form-control" aria-required="true" />
+                    <label for="MINReference">MIN Reference</label>
                 </div>
                 <div class="form-floating mb-3">
-                    <InputNumber @bind-Value="InputModel.ReferenceMin" class="form-control" aria-required="true" />
-                    <label for="MINReference">MAX Reference</label>
+                    <InputNumber @bind-Value="InputModel.ReferenceMax" class="form-control" aria-required="true" />
+                    <label for="MAXReference">MAX Reference</label>
+                    <ValidationMessage For="() => InputModel.ReferenceMax" class="text-danger" />
                 </div>
                 <div class="form-floating mb-3">
                     <InputText type="unit" @bind-Value="InputModel.Unit" class="form-control" aria-required="true" />
@@ -136,7 +137,7 @@
 
     private bool isDigitalIndicator = true;
 
-    private bool isAddButtonBlocked = true;
+    private bool isAddButtonBlocked = false;
 
     private string nameFilter = string.Empty;
 

@@ -15,6 +15,12 @@ namespace DAL.Data
 
         public DbSet<Indicator> Indicators { get; set; }
 
-        public DbSet<Checkup> Checkups { get; set; }
+        public DbSet<CheckUp> CheckUps { get; set; }
+
+        public DbSet<Cure> Cures { get; set; }
+
+        public DbSet<Prescription> Prescriptions { get; set; }
+
+        public DbSet<Visit> Visits { get; set; }
     }
 }

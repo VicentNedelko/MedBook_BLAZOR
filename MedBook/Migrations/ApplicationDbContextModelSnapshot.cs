@@ -17,7 +17,7 @@ namespace MedBook.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.16")
+                .HasAnnotation("ProductVersion", "8.0.17")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -139,7 +139,7 @@ namespace MedBook.Migrations
                     b.ToTable("BearingIndicators");
                 });
 
-            modelBuilder.Entity("DAL.Data.Checkup", b =>
+            modelBuilder.Entity("DAL.Data.CheckUp", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -151,7 +151,9 @@ namespace MedBook.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Laboratory")
-                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OrderPID")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PatientId")
@@ -161,15 +163,41 @@ namespace MedBook.Migrations
                     b.Property<DateTime>("ResearchDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("SerialNum")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("VisitId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("PatientId");
 
-                    b.ToTable("Checkups");
+                    b.HasIndex("VisitId");
+
+                    b.ToTable("CheckUps");
+                });
+
+            modelBuilder.Entity("DAL.Data.Cure", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PrescriptionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PrescriptionId");
+
+                    b.ToTable("Cures");
                 });
 
             modelBuilder.Entity("DAL.Data.Indicator", b =>
@@ -183,7 +211,7 @@ namespace MedBook.Migrations
                     b.Property<int>("BearingIndicatorId")
                         .HasColumnType("int");
 
-                    b.Property<int>("CheckupId")
+                    b.Property<int>("CheckUpId")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -212,12 +240,12 @@ namespace MedBook.Migrations
 
                     b.HasIndex("BearingIndicatorId");
 
-                    b.HasIndex("CheckupId");
+                    b.HasIndex("CheckUpId");
 
-                    b.ToTable("Indicator");
+                    b.ToTable("Indicators");
                 });
 
-            modelBuilder.Entity("DAL.Data.Indices", b =>
+            modelBuilder.Entity("DAL.Data.Prescription", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -225,41 +253,17 @@ namespace MedBook.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("BearingIndicatorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CheckupId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
+                    b.Property<string>("Content")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("Number")
+                    b.Property<int>("VisitId")
                         .HasColumnType("int");
-
-                    b.Property<double?>("ReferenceMax")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("ReferenceMin")
-                        .HasColumnType("float");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Unit")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<double>("Value")
-                        .HasColumnType("float");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BearingIndicatorId");
+                    b.HasIndex("VisitId");
 
-                    b.HasIndex("CheckupId");
-
-                    b.ToTable("Indices");
+                    b.ToTable("Prescriptions");
                 });
 
             modelBuilder.Entity("DAL.Data.SampleIndicator", b =>
@@ -294,6 +298,40 @@ namespace MedBook.Migrations
                     b.HasIndex("BearingIndicatorId");
 
                     b.ToTable("SampleIndicators");
+                });
+
+            modelBuilder.Entity("DAL.Data.Visit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Comment")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DoctorId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("PatientId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId");
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("Visits");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -466,7 +504,7 @@ namespace MedBook.Migrations
                     b.HasDiscriminator().HasValue("Patient");
                 });
 
-            modelBuilder.Entity("DAL.Data.Checkup", b =>
+            modelBuilder.Entity("DAL.Data.CheckUp", b =>
                 {
                     b.HasOne("DAL.Data.Patient", "Patient")
                         .WithMany()
@@ -474,7 +512,24 @@ namespace MedBook.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("DAL.Data.Visit", "Visit")
+                        .WithMany("Researches")
+                        .HasForeignKey("VisitId");
+
                     b.Navigation("Patient");
+
+                    b.Navigation("Visit");
+                });
+
+            modelBuilder.Entity("DAL.Data.Cure", b =>
+                {
+                    b.HasOne("DAL.Data.Prescription", "Prescription")
+                        .WithMany("Cures")
+                        .HasForeignKey("PrescriptionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Prescription");
                 });
 
             modelBuilder.Entity("DAL.Data.Indicator", b =>
@@ -485,34 +540,26 @@ namespace MedBook.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DAL.Data.Checkup", "Checkup")
+                    b.HasOne("DAL.Data.CheckUp", "CheckUp")
                         .WithMany("Indicators")
-                        .HasForeignKey("CheckupId")
+                        .HasForeignKey("CheckUpId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("BearingIndicator");
 
-                    b.Navigation("Checkup");
+                    b.Navigation("CheckUp");
                 });
 
-            modelBuilder.Entity("DAL.Data.Indices", b =>
+            modelBuilder.Entity("DAL.Data.Prescription", b =>
                 {
-                    b.HasOne("DAL.Data.BearingIndicator", "BearingIndicator")
-                        .WithMany()
-                        .HasForeignKey("BearingIndicatorId")
+                    b.HasOne("DAL.Data.Visit", "Visit")
+                        .WithMany("Prescriptions")
+                        .HasForeignKey("VisitId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("DAL.Data.Checkup", "Checkup")
-                        .WithMany()
-                        .HasForeignKey("CheckupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("BearingIndicator");
-
-                    b.Navigation("Checkup");
+                    b.Navigation("Visit");
                 });
 
             modelBuilder.Entity("DAL.Data.SampleIndicator", b =>
@@ -524,6 +571,25 @@ namespace MedBook.Migrations
                         .IsRequired();
 
                     b.Navigation("BearingIndicator");
+                });
+
+            modelBuilder.Entity("DAL.Data.Visit", b =>
+                {
+                    b.HasOne("DAL.Data.Doctor", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAL.Data.Patient", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
+
+                    b.Navigation("Patient");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -591,9 +657,21 @@ namespace MedBook.Migrations
                     b.Navigation("Samples");
                 });
 
-            modelBuilder.Entity("DAL.Data.Checkup", b =>
+            modelBuilder.Entity("DAL.Data.CheckUp", b =>
                 {
                     b.Navigation("Indicators");
+                });
+
+            modelBuilder.Entity("DAL.Data.Prescription", b =>
+                {
+                    b.Navigation("Cures");
+                });
+
+            modelBuilder.Entity("DAL.Data.Visit", b =>
+                {
+                    b.Navigation("Prescriptions");
+
+                    b.Navigation("Researches");
                 });
 
             modelBuilder.Entity("DAL.Data.Doctor", b =>

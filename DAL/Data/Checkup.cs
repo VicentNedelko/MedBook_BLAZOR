@@ -2,25 +2,29 @@
 
 namespace DAL.Data
 {
-    public class Checkup
+    public class CheckUp : IEquatable<CheckUp>
     {
         public int Id { get; set; }
-        public string Laboratory { get; set; } // Laboratory Name
-        public string SerialNum { get; set; } // Order PID
+        public string? Laboratory { get; set; }
+        public string? OrderPID { get; set; }
         public DateTime ResearchDate { get; set; }
 
         public string? Comment { get; set; }
 
         // Patient FK
-        public string PatientId { get; set; }
-        public Patient Patient { get; set; }
+        public required string PatientId { get; set; }
+        public required Patient Patient { get; set; }
 
-        public List<Indicator> Indicators { get; set; }
+        //Visit FK
+        public int? VisitId { get; set; }
+        public Visit? Visit { get; set; }
+
+        public required List<Indicator> Indicators { get; set; }
 
 
-        public bool Equals([AllowNull] Checkup other)
+        public bool Equals([AllowNull] CheckUp other)
         {
-            if (other is not Checkup)
+            if (other is null)
             {
                 return false;
             }
@@ -36,7 +40,7 @@ namespace DAL.Data
             return base.GetHashCode();
         }
 
-        private bool IndicatorsEquality(List<Indicator> indicators1, List<Indicator> indicators2)
+        private static bool IndicatorsEquality(List<Indicator> indicators1, List<Indicator> indicators2)
         {
             for (var i = 0; i < indicators1.Count; i++)
             {

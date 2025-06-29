@@ -10,8 +10,8 @@ namespace DAL.Data
         public int BearingIndicatorId { get; set; }
         public BearingIndicator BearingIndicator { get; set; }
 
-        public int CheckupId { get; set; }
-        public Checkup Checkup { get; set; }
+        public int CheckUpId { get; set; }
+        public CheckUp CheckUp { get; set; }
 
         public int CompareTo([AllowNull] Indicator other)
         {
