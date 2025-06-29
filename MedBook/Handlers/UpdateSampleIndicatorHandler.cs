@@ -24,6 +24,7 @@ namespace MedBook.Handlers
                     sampleIndicator.ReferenceMax = newBearing.ReferenceMax;
                     sampleIndicator.ReferenceMin = newBearing.ReferenceMin;
                     sampleIndicator.Unit = newBearing.Unit;
+                    sampleIndicator.Type = newBearing.Type;
                 }
 
                 sampleIndicator.Name = request.SampleIndicatorDto.Name;

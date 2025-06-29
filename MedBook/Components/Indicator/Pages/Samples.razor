@@ -178,19 +178,16 @@
         isButtonDisable = false;
     }
 
-    private async Task OnEditIndicator(SampleIndicatorDto sampleIndicatorDto)
-    {
-        sampleModal.Show(sampleIndicatorDto);    
-    }
+    private async Task OnEditIndicator(SampleIndicatorDto sampleIndicatorDto) => sampleModal.Show(sampleIndicatorDto);    
 
     private async Task OnDeleteIndicator(SampleIndicatorDto sampleIndicatorDto) => deleteModal.Show(sampleIndicatorDto);
 
     private List<SampleIndicatorDto> sampleIndicators => string.IsNullOrEmpty(SearchValue) ?
-           Context.SampleIndicators
+           Context!.SampleIndicators
                .AsNoTracking()
                .ProjectTo<SampleIndicatorDto>(Mapper.ConfigurationProvider)
                .ToList() :
-           Context.SampleIndicators
+           Context!.SampleIndicators
                .AsNoTracking()
                .Where(si => si.Name.Contains(SearchValue, StringComparison.OrdinalIgnoreCase))
                .ProjectTo<SampleIndicatorDto>(Mapper.ConfigurationProvider)
@@ -231,8 +228,16 @@
         }
     }
 
-    protected void DeleteSampleIndicator(SampleIndicatorDto args)
+    protected async Task DeleteSampleIndicator(SampleIndicatorDto sampleIndicatorDto)
     {
-        throw new NotImplementedException();
+        var response = await Mediator.Send(new DeleteSampleIndicatorRequest(sampleIndicatorDto));
+        if (response.Status != -1)
+        {
+            ToastService.ShowToast($"Indicator {sampleIndicatorDto.Name} deleted successfully.", ToastLevel.Info);
+        }
+        else
+        {
+            ToastService.ShowToast($"Delete indicator {sampleIndicatorDto.Name} failed!", ToastLevel.Error);
+        }
     }
 }

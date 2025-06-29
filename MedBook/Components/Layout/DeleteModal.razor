@@ -1,5 +1,30 @@
 ﻿@using Business.DTO
 
+@if (showModal)
+{
+    <div class="modal fade show d-block" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">@Header</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-12" style="text-align:left">
+                            <label>You are about to delete @($"'{SampleModel.Name}'"). Delete?</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => showModal = false">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="async () => await OnDeleteSampleIndicator(SampleModel)">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     [Parameter]
     public string Header { get; set; } = string.Empty;
@@ -7,8 +32,20 @@
     [Parameter]
     public EventCallback<SampleIndicatorDto> DeleteSampleIndicator { get; set; }
 
+    public SampleIndicatorDto SampleModel { get; set; }
+
+    private bool showModal;
+
     public void Show(SampleIndicatorDto indicatorDto)
     {
+        SampleModel = indicatorDto;
+        showModal = true;
         StateHasChanged();
+    }
+
+    private async Task OnDeleteSampleIndicator(SampleIndicatorDto sampleIndicatorDto)
+    {
+        showModal = false;
+        await DeleteSampleIndicator.InvokeAsync(sampleIndicatorDto);
     }
 }

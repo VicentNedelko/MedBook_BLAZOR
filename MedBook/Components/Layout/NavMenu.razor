@@ -89,7 +89,8 @@
 
             if (user?.Identity is not null && user.Identity.IsAuthenticated)
             {
-                userFullName = user.Claims.FirstOrDefault(x => x.Type == "FullName")?.Value;
+                var userNameInDb = user.Claims.FirstOrDefault(x => x.Type == "FullName")?.Value;
+                userFullName = userNameInDb!.Length > 20 ? userNameInDb.Substring(0, 20) : userNameInDb;
             }
         }
     }
