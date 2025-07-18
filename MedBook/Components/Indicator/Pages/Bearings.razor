@@ -40,7 +40,6 @@
             <div class="form-floating mb-3">
                 <InputText id="name" @bind-value="InputModel.Name" class="form-control" aria-required="true" />
                 <label for="name">Name</label>
-                <ValidationMessage For="() => InputModel.Name" class="text-danger" />
             </div>
             <div class="form-floating mb-3">
                 <InputSelect id="type" @bind-Value="InputModel.Type" @bind-Value:after="IsDigitalValue" class="form-select" aria-required="true" placeholder="Select type">
@@ -49,7 +48,6 @@
                     <option value=@IndTYPE.YESNO>YES/NO</option>
                 </InputSelect>
                 <label for="type">Indicator TYPE</label>
-                <ValidationMessage For="() => InputModel.Type" class="text-danger" />
             </div>
             @if (isDigitalIndicator)
             {
@@ -60,7 +58,6 @@
                 <div class="form-floating mb-3">
                     <InputNumber @bind-Value="InputModel.ReferenceMax" class="form-control" aria-required="true" />
                     <label for="MAXReference">MAX Reference</label>
-                    <ValidationMessage For="() => InputModel.ReferenceMax" class="text-danger" />
                 </div>
                 <div class="form-floating mb-3">
                     <InputText type="unit" @bind-Value="InputModel.Unit" class="form-control" aria-required="true" />

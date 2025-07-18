@@ -9,6 +9,7 @@ using MedBook.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +26,15 @@ builder.Services.AddScoped<AuthenticationStateProvider, IdentityRevalidatingAuth
 builder.Services.AddScoped<ToastService>();
 builder.Services.AddScoped<PdfParser>();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
+
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .MinimumLevel.Information()
+    .WriteTo.Console()
+    .WriteTo.File("logs/MedBookWeb.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Services.AddSerilog();
 
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 

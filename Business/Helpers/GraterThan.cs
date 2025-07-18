@@ -16,6 +16,12 @@ namespace Business.Helpers
             if ((int)typeValue == 0) // If Digital value
             {
                 ErrorMessage = ErrorMessageString;
+
+                if (value is null)
+                {
+                    return new ValidationResult("Reference values should be set up.");
+                }
+
                 var currentValue = (double)value;
 
                 var property = validationContext.ObjectType.GetProperty(comparisonProperty);

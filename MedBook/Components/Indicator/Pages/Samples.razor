@@ -13,6 +13,7 @@
 @using Microsoft.EntityFrameworkCore
 @using AutoMapper
 @using MedBook.Components.Layout
+@using Serilog
 
 @implements IDisposable
 
@@ -22,7 +23,6 @@
 @inject IMediator Mediator
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 @inject IMapper Mapper
-@inject ILogger<Samples> Logger
 
 <PageTitle>Sample Indicator</PageTitle>
 
@@ -42,7 +42,6 @@
             <div class="form-floating mb-3">
                 <InputText id="name" @bind-value="InputModel.Name" class="form-control" aria-required="true" />
                 <label for="name">Name</label>
-                <ValidationMessage For="() => InputModel.Name" class="text-danger" />
             </div>
             <div class="form-floating mb-3">
                 <InputSelect id="type" @bind-Value="InputModel.BearingIndicatorId" @bind-Value:after="FillIndicatorParameters" class="form-select" aria-required="true" placeholder="Select bearing">
@@ -53,7 +52,6 @@
                     }
                 </InputSelect>
                 <label for="bearing">Bearing indicator</label>
-                <ValidationMessage For="() => InputModel.BearingIndicatorId" class="text-danger" />
             </div>
             <div class="form-floating mb-3">
                 <InputText id="name" @bind-value="bearingModel.Unit" class="form-control" disabled="true" />
@@ -202,14 +200,14 @@
         var response = await Mediator.Send(new AddSampleIndicatorRequest(InputModel));
         if (response.Status != -1)
         {
-            Logger.LogInformation($"Sample indicator {InputModel.Name} added.");
+            Log.Information($"Sample indicator {InputModel.Name} added.");
             ResetForm();
             isButtonDisable = true;
             ToastService.ShowToast($"Indicator {InputModel.Name} saved successfully.", ToastLevel.Info);
         }
         else
         {
-            Logger.LogInformation($"Indicator {InputModel.Name} already exists. Check indicator name and try again!");
+            Log.Information($"Indicator {InputModel.Name} already exists. Check indicator name and try again!");
             ToastService.ShowToast($"Indicator {InputModel.Name} already exists. Check indicator name and try again!", ToastLevel.Error);
         }
     }
