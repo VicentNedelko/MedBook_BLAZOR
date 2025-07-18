@@ -38,10 +38,10 @@
             <DataAnnotationsValidator />
             <h3>Create a new sample indicator.</h3>
             <hr />
-            <ValidationSummary class="text-danger" role="alert" />
             <div class="form-floating mb-3">
                 <InputText id="name" @bind-value="InputModel.Name" class="form-control" aria-required="true" />
                 <label for="name">Name</label>
+                <ValidationMessage For="() => InputModel.Name" class="text-danger" />
             </div>
             <div class="form-floating mb-3">
                 <InputSelect id="type" @bind-Value="InputModel.BearingIndicatorId" @bind-Value:after="FillIndicatorParameters" class="form-select" aria-required="true" placeholder="Select bearing">
@@ -53,18 +53,22 @@
                 </InputSelect>
                 <label for="bearing">Bearing indicator</label>
             </div>
-            <div class="form-floating mb-3">
-                <InputText id="name" @bind-value="bearingModel.Unit" class="form-control" disabled="true" />
-                <label for="name">Unit</label>
-            </div>
-            <div class="form-floating mb-3">
-                <InputNumber id="name" @bind-value="bearingModel.ReferenceMax" class="form-control" disabled="true" />
-                <label for="name">Reference MAX</label>
-            </div>
-            <div class="form-floating mb-3">
-                <InputNumber id="name" @bind-value="bearingModel.ReferenceMin" class="form-control" disabled="true" />
-                <label for="name">Reference MIN</label>
-            </div>
+            @if (isDigitalIndicator)
+            {
+                <div class="form-floating mb-3">
+                    <InputText id="name" @bind-value="bearingModel.Unit" class="form-control" disabled="true" />
+                    <label for="name">Unit</label>
+                    <ValidationMessage For="() => InputModel.Unit" class="text-danger" />
+                </div>
+                <div class="form-floating mb-3">
+                    <InputNumber id="name" @bind-value="bearingModel.ReferenceMax" class="form-control" disabled="true" />
+                    <label for="name">Reference MAX</label>
+                </div>
+                <div class="form-floating mb-3">
+                    <InputNumber id="name" @bind-value="bearingModel.ReferenceMin" class="form-control" disabled="true" />
+                    <label for="name">Reference MIN</label>
+                </div>
+            }
             <div class="form-floating mb-3">
                 <InputText id="name" @bind-value="bearingModel.Description" class="form-control" disabled="true" />
                 <label for="name">Description</label>
@@ -139,26 +143,28 @@
     [SupplyParameterFromForm]
     private SampleIndicatorDto InputModel { get; set; } = new();
 
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
     private string SearchValue = string.Empty;
 
     private BearingIndicatorDto bearingModel = new();
 
     private bool isButtonDisable = true;
 
-    public SampleModal sampleModal { get; set; }
-
-    public DeleteModal deleteModal { get; set; }
-
-    PaginationState pagination = new PaginationState { ItemsPerPage = 15 };
+    private bool isDigitalIndicator = true;
 
     private string nameFilter = string.Empty;
 
+    PaginationState pagination = new PaginationState { ItemsPerPage = 15 };
+
     private List<BearingIndicatorDto> bearingIndicators = new();
 
-    [SupplyParameterFromQuery]
-    private string? ReturnUrl { get; set; }
-
     private ApplicationDbContext? Context { get; set; }
+
+    public SampleModal sampleModal { get; set; }
+
+    public DeleteModal deleteModal { get; set; }
 
     public void Dispose() => Context?.Dispose();
 
@@ -176,6 +182,8 @@
         {
             throw new ArgumentNullException(nameof(bearingModel), $"Bearing indicator Id {InputModel.BearingIndicatorId} not found.");
         }
+
+        isDigitalIndicator = bearingModel.Type == IndTYPE.VALUE ? true : false;
 
         isButtonDisable = false;
     }
@@ -215,6 +223,7 @@
     private void ResetForm()
     {
         InputModel = new();
+        bearingModel = new();
     }
 
     protected async Task UpdateSampleIndicator(SampleIndicatorDto sampleIndicatorDto)
