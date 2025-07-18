@@ -1,0 +1,205 @@
+﻿@page "/CheckUps/Upload"
+@attribute [Authorize(Roles = "Patient")]
+
+@using AutoMapper.QueryableExtensions
+@using AutoMapper
+@using Business.DTO
+@using Business.Enum
+@using Business.PDF
+@using Business.Services
+@using DAL.Data
+@using MedBook.Components.Layout
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using Microsoft.EntityFrameworkCore
+
+@rendermode InteractiveServer
+
+@inject ILogger<Upload> Logger
+@inject ToastService ToastService
+@inject IMapper Mapper
+@inject IDbContextFactory<ApplicationDbContext> DbFactory
+
+<Toast />
+
+<div class="row">
+    <div class="col-md-4">
+        <label>
+            <label for="formFile" class="form-label">Upload PDF file less than 4MB</label>
+            <InputFile OnChange="ProcessFile" class="form-control" type="file" id="formFile" accept=".pdf, .PDF" />
+        </label>
+    </div>
+</div>
+@if (!isLoading)
+{
+    <div class="row">
+        <div class="col-md-12">
+            <QuickGrid Class="table table-striped m-0" Items="uploadedIndicators.AsQueryable()">
+                <PropertyColumn Property="@(i => i.Name)" Title="Name" Sortable="true" IsDefaultSortColumn InitialSortDirection="SortDirection.Ascending" />
+                <TemplateColumn Title="Reference Min" Align="Align.Center">
+                    @if (context.ReferenceMin is not null)
+                    {
+                        <span>@context.ReferenceMin</span>
+                    }
+                    else
+                    {
+                        <span>-</span>
+                    }
+                </TemplateColumn>
+                <TemplateColumn Title="Reference Max" Align="Align.Center">
+                    @if (context.ReferenceMax is not null)
+                    {
+                        <span>@context.ReferenceMax</span>
+                    }
+                    else
+                    {
+                        <span>-</span>
+                    }
+                </TemplateColumn>
+                <TemplateColumn Title="Unit" Align="Align.Center">
+                    @if (context.Unit is not null)
+                    {
+                        <span>@context.Unit</span>
+                    }
+                    else
+                    {
+                        <span>Yes/No</span>
+                    }
+                </TemplateColumn>
+                <TemplateColumn>
+                    <button type="button" @onclick="async () => await OnEditIndicator(context)" class="btn btn-outline-primary">Edit</button>
+                </TemplateColumn>
+                <TemplateColumn>
+                    <button type="button" @onclick="async () => await OnDeleteIndicator(context)" class="btn btn-outline-danger">Delete</button>
+                </TemplateColumn>
+            </QuickGrid>
+        </div>
+    </div>
+}
+else if (spinnerShow)
+{
+    <div class="container">
+        <div class="row">
+            <div class="col-md-offset-5 col-md-5" />
+            <div class="col-md-2">
+                <div class="spinner-border text-success" role="status">
+                    <span class="visually-hidden">Parsing...</span>
+                </div>
+            </div>
+            <div class="col-md-offset-5 col-md-5" />
+        </div>
+    </div>
+}
+
+@code {
+    private List<IndicatorDto> uploadedIndicators { get; set; } = new();
+
+    private List<SampleIndicatorDto> sampleIndicators { get; set; }
+
+    private List<BearingIndicatorDto> bearingIndicators { get; set; }
+
+    private const int maxFileSize = 1024 * 1024 * 4;
+
+    private bool isLoading = true;
+
+    private bool spinnerShow = false;
+
+    private ApplicationDbContext? Context { get; set; }
+
+    public void Dispose() => Context?.Dispose();
+
+    protected override void OnInitialized()
+    {
+        Context = DbFactory.CreateDbContext();
+
+        sampleIndicators = Context.SampleIndicators.AsNoTracking().ProjectTo<SampleIndicatorDto>(Mapper.ConfigurationProvider).ToList();
+        bearingIndicators = Context.BearingIndicators.AsNoTracking().ProjectTo<BearingIndicatorDto>(Mapper.ConfigurationProvider).ToList();
+    }
+
+
+    private async Task ProcessFile(InputFileChangeEventArgs e)
+    {
+        isLoading = true;
+        spinnerShow = true;
+        var browserFile = e.File;
+
+        try
+        {
+            var filePath = await LoadFileAsync(browserFile);
+            var uploadedIndicatorsDictionary = PdfParser.GetIndicatorsWithValues(filePath, sampleIndicators);
+            uploadedIndicators = GetUploadedIndicators(uploadedIndicatorsDictionary);
+            ToastService.ShowToast($"File {browserFile.Name} has been parsed.", ToastLevel.Success);
+        }
+        catch
+        {
+            throw;
+        }
+
+        isLoading = false;
+        spinnerShow = false;
+    }
+
+    private async Task<string> LoadFileAsync(IBrowserFile browserFile)
+    {
+        try
+        {
+            var filePath = await FileService.LoadFile(browserFile);
+            Logger.LogInformation($"File {browserFile.Name} is uploaded.");
+
+            return filePath;
+        }
+        catch
+        {
+            ToastService.ShowToast($"File {browserFile.Name} uploading failed.", ToastLevel.Error);
+            throw;
+        }
+    }
+
+    private List<IndicatorDto> GetUploadedIndicators(Dictionary<int, double> uploadedIndicatorsDictionary)
+    {
+        var indicators = new List<IndicatorDto>();
+        if (uploadedIndicatorsDictionary.Count != 0)
+        {
+            foreach (var indicatorKeyValue in uploadedIndicatorsDictionary)
+            {
+                var uploadedIndicator = CreateIndicator(indicatorKeyValue);
+                indicators.Add(uploadedIndicator);
+                Logger.LogInformation($"Indicator {uploadedIndicator.Name} has been recognized.");
+            }
+        }
+
+        return indicators;
+    }
+
+    private IndicatorDto CreateIndicator(KeyValuePair<int, double> keyValuePair)
+    {
+        var bearingIndicator = bearingIndicators.FirstOrDefault(x => x.Id == keyValuePair.Key);
+
+        if (bearingIndicator is not null)
+        {
+            return new IndicatorDto
+            {
+                Name = bearingIndicator.Name,
+                ReferenceMin = bearingIndicator.ReferenceMin,
+                ReferenceMax = bearingIndicator.ReferenceMax,
+                Type = bearingIndicator.Type,
+                Value = keyValuePair.Value,
+                Unit = bearingIndicator.Unit,
+                BearingIndicatorId = keyValuePair.Key
+            };
+        }
+
+        Logger.LogInformation($"Bearing Indicator ID={keyValuePair.Key} is not found in DB.");
+        throw new ArgumentNullException($"Bearing Indicator ID={keyValuePair.Key} is not found in DB.");
+    }
+
+    private async Task OnEditIndicator(IndicatorDto indicator)
+    {
+
+    }
+
+    private async Task OnDeleteIndicator(IndicatorDto indicator)
+    {
+
+    }
+}

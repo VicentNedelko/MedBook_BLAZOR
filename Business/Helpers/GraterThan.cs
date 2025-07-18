@@ -13,7 +13,7 @@ namespace Business.Helpers
             var actualType = validationContext.ObjectType.GetProperty(type);
             var indType = actualType.PropertyType.GetEnumUnderlyingType();
             var typeValue = Convert.ChangeType(actualType.GetValue(validationContext.ObjectInstance), indType);
-            if ((int)typeValue == 0)
+            if ((int)typeValue == 0) // If Digital value
             {
                 ErrorMessage = ErrorMessageString;
                 var currentValue = (double)value;

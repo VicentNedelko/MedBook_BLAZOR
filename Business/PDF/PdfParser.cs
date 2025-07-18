@@ -1,4 +1,5 @@
-﻿using DAL.Data;
+﻿using Business.DTO;
+using DAL.Enum;
 using System.Globalization;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
@@ -11,7 +12,11 @@ namespace Business.PDF
     {
         private static readonly char[] separators = [' '];
 
-        public static Dictionary<int, double> GetNumericIndicatorsWithValues(string path, List<SampleIndicator> sampleIndicators)
+        private static readonly string[] negativeResults = ["отрицат.", "не выявлено"];
+        
+        private static readonly string[] positiveResults = ["полож.", "выявлено"];
+
+        public static Dictionary<int, double> GetIndicatorsWithValues(string path, List<SampleIndicatorDto> sampleIndicators)
         {
             var indicatorIdsWithValues = new Dictionary<int, double>();
 
@@ -53,7 +58,7 @@ namespace Business.PDF
                         var index = Array.IndexOf(sentences, sentence);
                         while (valueNotFound)
                         {
-                            var indicatorValue = GetNumericIndicatorValue(sentences[index]);
+                            var indicatorValue = GetIndicatorValue(sentences[index], indicator);
                             indicatorIdsWithValues.Add(indicator.BearingIndicatorId, indicatorValue);
                             if (indicatorValue != 0)
                             {
@@ -68,17 +73,31 @@ namespace Business.PDF
             return indicatorIdsWithValues;
         }
 
-        private static double GetNumericIndicatorValue(string sentence)
+        private static double GetIndicatorValue(string sentence, SampleIndicatorDto indicator)
         {
             bool isValueParsed = false;
-            double result = -1;
+            double result = 0;
             int i = 0;
 
             var words = sentence.Split(separators, StringSplitOptions.None);
-            while (!isValueParsed && i < words.Length)
+            if (indicator.Type == IndTYPE.VALUE)
             {
-                isValueParsed = double.TryParse(words[i].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out result);
-                i++;
+                while (!isValueParsed && i < words.Length)
+                {
+                    isValueParsed = double.TryParse(words[i].Trim(), NumberStyles.Any, CultureInfo.InvariantCulture, out result);
+                    i++;
+                }
+            }
+            else
+            {
+                if(negativeResults.Any(x => words.Contains(x)))
+                {
+                    result = -1;
+                }
+                else if(positiveResults.Any(x => words.Contains(x)))
+                {
+                    result = 1;
+                }
             }
 
             return result;

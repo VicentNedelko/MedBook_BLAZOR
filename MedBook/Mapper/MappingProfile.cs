@@ -10,6 +10,7 @@ namespace MedBook.Mapper
         {
             CreateMap<BearingIndicator, BearingIndicatorDto>().ReverseMap();
             CreateMap<SampleIndicator, SampleIndicatorDto>().ReverseMap();
+            CreateMap<Indicator, IndicatorDto>().ReverseMap();
         }
     }
 }

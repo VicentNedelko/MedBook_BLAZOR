@@ -81,59 +81,63 @@
             </div>
         </div>
         <hr />
-        <QuickGrid Class="table table-striped m-0" Items="sampleIndicators.AsQueryable()" Pagination="pagination">
-            <PropertyColumn Property="@(si => si.Name)" Title="Name" Sortable="true" IsDefaultSortColumn InitialSortDirection="SortDirection.Ascending">
-                <ColumnOptions>
-                    <div class="search-box">
-                        <input type="search" autofocus @bind="nameFilter" placeholder="Indicator name" @bind:event="oninput" />
-                    </div>
-                </ColumnOptions>
-            </PropertyColumn>
-            <TemplateColumn Title="Reference Min" Align="Align.Center">
-                @if (context.ReferenceMin is not null)
-                {
-                    <span>@context.ReferenceMin</span>
-                }
-                else
-                {
-                    <span>-</span>
-                }
-            </TemplateColumn>
-            <TemplateColumn Title="Reference Max" Align="Align.Center">
-                @if (context.ReferenceMax is not null)
-                {
-                    <span>@context.ReferenceMax</span>
-                }
-                else
-                {
-                    <span>-</span>
-                }
-            </TemplateColumn>
-            <TemplateColumn Title="Unit" Align="Align.Center">
-                @if (context.Unit is not null)
-                {
-                    <span>@context.Unit</span>
-                }
-                else
-                {
-                    <span>Yes/No</span>
-                }
-            </TemplateColumn>
-            <TemplateColumn>
-                <button type="button" @onclick="async () => await OnEditIndicator(context)" class="btn btn-outline-primary">Edit</button>
-            </TemplateColumn>
-            <TemplateColumn>
-                <button type="button" @onclick="async () => await OnDeleteIndicator(context)" class="btn btn-outline-danger">Delete</button>
-            </TemplateColumn>
-        </QuickGrid>
-        <Paginator State="pagination" />
+        @if (sampleIndicators is null || sampleIndicators.Count == 0)
+        {
+            <h6>No indicators added.</h6>
+        }
+        else
+        {
+            <QuickGrid Class="table table-striped m-0" Items="sampleIndicators.AsQueryable()" Pagination="pagination">
+                <PropertyColumn Property="@(si => si.Name)" Title="Name" Sortable="true" IsDefaultSortColumn InitialSortDirection="SortDirection.Ascending">
+                    <ColumnOptions>
+                        <div class="search-box">
+                            <input type="search" autofocus @bind="nameFilter" placeholder="Indicator name" @bind:event="oninput" />
+                        </div>
+                    </ColumnOptions>
+                </PropertyColumn>
+                <TemplateColumn Title="Reference Min" Align="Align.Center">
+                    @if (context.ReferenceMin is not null)
+                    {
+                        <span>@context.ReferenceMin</span>
+                    }
+                    else
+                    {
+                        <span>-</span>
+                    }
+                </TemplateColumn>
+                <TemplateColumn Title="Reference Max" Align="Align.Center">
+                    @if (context.ReferenceMax is not null)
+                    {
+                        <span>@context.ReferenceMax</span>
+                    }
+                    else
+                    {
+                        <span>-</span>
+                    }
+                </TemplateColumn>
+                <TemplateColumn Title="Unit" Align="Align.Center">
+                    @if (context.Unit is not null)
+                    {
+                        <span>@context.Unit</span>
+                    }
+                    else
+                    {
+                        <span>Yes/No</span>
+                    }
+                </TemplateColumn>
+                <TemplateColumn>
+                    <button type="button" @onclick="async () => await OnEditIndicator(context)" class="btn btn-outline-primary">Edit</button>
+                </TemplateColumn>
+                <TemplateColumn>
+                    <button type="button" @onclick="async () => await OnDeleteIndicator(context)" class="btn btn-outline-danger">Delete</button>
+                </TemplateColumn>
+            </QuickGrid>
+            <Paginator State="pagination" />
+        }
     </div>
 </div>
 
 @code {
-    [CascadingParameter]
-    private Task<AuthenticationState>? authenticationState { get; set; }
-
     [SupplyParameterFromForm]
     private SampleIndicatorDto InputModel { get; set; } = new();
 
@@ -178,7 +182,7 @@
         isButtonDisable = false;
     }
 
-    private async Task OnEditIndicator(SampleIndicatorDto sampleIndicatorDto) => sampleModal.Show(sampleIndicatorDto);    
+    private async Task OnEditIndicator(SampleIndicatorDto sampleIndicatorDto) => sampleModal.Show(sampleIndicatorDto);
 
     private async Task OnDeleteIndicator(SampleIndicatorDto sampleIndicatorDto) => deleteModal.Show(sampleIndicatorDto);
 
