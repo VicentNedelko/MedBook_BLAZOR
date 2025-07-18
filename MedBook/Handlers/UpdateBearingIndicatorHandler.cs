@@ -19,6 +19,7 @@ namespace MedBook.Handlers
                 indicator.ReferenceMax = request.BearingIndicatorDto.ReferenceMax;
                 indicator.Unit = request.BearingIndicatorDto.Unit;
                 indicator.Type = request.BearingIndicatorDto.Type;
+                indicator.Description = request.BearingIndicatorDto.Description;
 
                 var status = await dbContext!.SaveChangesAsync(cancellationToken);
 

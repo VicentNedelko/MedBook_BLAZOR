@@ -4,9 +4,9 @@
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Identity
 @using DAL.Data
+@using Serilog
 
 @inject SignInManager<ApplicationUser> SignInManager
-@inject ILogger<Login> Logger
 @inject NavigationManager NavigationManager
 @inject IdentityRedirectManager RedirectManager
 
@@ -84,7 +84,7 @@
         var result = await SignInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
         if (result.Succeeded)
         {
-            Logger.LogInformation("User logged in.");
+            Log.Information("User logged in.");
             RedirectManager.RedirectTo("/");
         }
         else if (result.RequiresTwoFactor)
@@ -95,7 +95,7 @@
         }
         else if (result.IsLockedOut)
         {
-            Logger.LogWarning("User account locked out.");
+            Log.Warning("User account locked out.");
             RedirectManager.RedirectTo("Account/Lockout");
         }
         else

@@ -51,12 +51,24 @@
                                 <InputText @bind-Value="InputModel!.Unit" class="form-control" aria-required="true" />
                             </div>
                         </div>
+                        <hr />
                     }
                     else
                     {
                         InputModel.ReferenceMin = null;
                         InputModel.ReferenceMax = null;
                         InputModel.Unit = null;
+                    }
+                    @if (!string.IsNullOrEmpty(InputModel.Description))
+                    {
+                        <div class="row">
+                            <div class="col-md-4" style="text-align:right">
+                                <label>Description</label>
+                            </div>
+                            <div class="col-md-8">
+                                <InputText @bind-Value="InputModel!.Description" class="form-control" aria-required="true" />
+                            </div>
+                        </div>
                     }
                 </div>
                 <div class="modal-footer">

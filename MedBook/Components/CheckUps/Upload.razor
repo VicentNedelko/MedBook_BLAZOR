@@ -12,10 +12,10 @@
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using Microsoft.EntityFrameworkCore
+@using Serilog
 
 @rendermode InteractiveServer
 
-@inject ILogger<Upload> Logger
 @inject ToastService ToastService
 @inject IMapper Mapper
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
@@ -144,7 +144,7 @@ else if (spinnerShow)
         try
         {
             var filePath = await FileService.LoadFile(browserFile);
-            Logger.LogInformation($"File {browserFile.Name} is uploaded.");
+            Log.Information($"File {browserFile.Name} is uploaded.");
 
             return filePath;
         }
@@ -164,7 +164,7 @@ else if (spinnerShow)
             {
                 var uploadedIndicator = CreateIndicator(indicatorKeyValue);
                 indicators.Add(uploadedIndicator);
-                Logger.LogInformation($"Indicator {uploadedIndicator.Name} has been recognized.");
+                Log.Information($"Indicator {uploadedIndicator.Name} has been recognized.");
             }
         }
 
@@ -189,7 +189,7 @@ else if (spinnerShow)
             };
         }
 
-        Logger.LogInformation($"Bearing Indicator ID={keyValuePair.Key} is not found in DB.");
+        Log.Information($"Bearing Indicator ID={keyValuePair.Key} is not found in DB.");
         throw new ArgumentNullException($"Bearing Indicator ID={keyValuePair.Key} is not found in DB.");
     }
 
