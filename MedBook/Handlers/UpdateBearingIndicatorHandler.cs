@@ -1,6 +1,7 @@
 ﻿using DAL.Data;
 using MedBook.Requests;
 using MediatR;
+using Serilog;
 
 namespace MedBook.Handlers
 {
@@ -23,10 +24,13 @@ namespace MedBook.Handlers
 
                 var status = await dbContext!.SaveChangesAsync(cancellationToken);
 
+                Log.Information($"{indicator.Name} updated successfully.");
+
                 return new UpdateBearingIndicatorRequest.Response(status);
             }
-            catch
+            catch (Exception e)
             {
+                Log.Error($"Error updating {indicator.Name} - {e.Message}.");
                 throw;
             }
         }

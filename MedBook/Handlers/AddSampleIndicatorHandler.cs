@@ -3,6 +3,7 @@ using DAL.Data;
 using MedBook.Requests;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 namespace MedBook.Handlers
 {
@@ -13,15 +14,10 @@ namespace MedBook.Handlers
 
         public async Task<AddSampleIndicatorRequest.Response> Handle(AddSampleIndicatorRequest request, CancellationToken cancellationToken)
         {
-            if (context == null)
-            {
-                throw new InvalidOperationException("Database context is not initialized.");
-            }
-
-            var isExists = await context.SampleIndicators.AsNoTracking().FirstOrDefaultAsync(x => x.Name.ToUpper() == request.SampleIndicatorDto.Name.ToUpper());
+            var isExists = await context!.SampleIndicators.AsNoTracking().FirstOrDefaultAsync(x => x.Name.ToUpper() == request.SampleIndicatorDto.Name.ToUpper(), cancellationToken: cancellationToken);
             if (isExists is null)
             {
-                var bearingIndicator = await context.BearingIndicators.FirstOrDefaultAsync(x => x.Id == request.SampleIndicatorDto.BearingIndicatorId);
+                var bearingIndicator = await context!.BearingIndicators.FirstOrDefaultAsync(x => x.Id == request.SampleIndicatorDto.BearingIndicatorId, cancellationToken: cancellationToken);
                 if (bearingIndicator is not null)
                 {
                     var sampleIndicator = CreateIndicator(request, bearingIndicator);
@@ -32,10 +28,14 @@ namespace MedBook.Handlers
                 try
                 {
                     var status = await context.SaveChangesAsync(cancellationToken);
+                    Log.Information($"Sample indicator with bearing {bearingIndicator.Name} saved successfully.");
+
                     return new AddSampleIndicatorRequest.Response(status);
                 }
-                catch
+                catch (Exception e)
                 {
+                    Log.Error($"Error while saving Sample indicator - {e.Message}.");
+
                     throw;
                 }
             }

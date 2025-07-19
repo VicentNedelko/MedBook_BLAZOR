@@ -1,12 +1,13 @@
 ﻿using DAL.Data;
 using MedBook.Requests;
 using MediatR;
+using Serilog;
 
 namespace MedBook.Handlers
 {
     public class UpdateSampleIndicatorHandler(ApplicationDbContext dbContext) : IRequestHandler<UpdateSampleIndicatorRequest, UpdateSampleIndicatorRequest.Response>
     {
-        private readonly ApplicationDbContext dbContext = dbContext;
+        private readonly ApplicationDbContext dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         public async Task<UpdateSampleIndicatorRequest.Response> Handle(UpdateSampleIndicatorRequest request, CancellationToken cancellationToken)
         {
             var sampleIndicator = dbContext.SampleIndicators.SingleOrDefault(x => x.Id == request.SampleIndicatorDto.Id) ??
@@ -31,10 +32,14 @@ namespace MedBook.Handlers
 
                 var status = await dbContext.SaveChangesAsync(cancellationToken);
 
+                Log.Information($"{sampleIndicator.Name} updated successfully.");
+
                 return new UpdateSampleIndicatorRequest.Response(status);
             }
-            catch
+            catch (Exception e)
             {
+                Log.Error($"Error updating {sampleIndicator.Name} - {e.Message}.");
+
                 throw;
             }
         }

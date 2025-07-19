@@ -1,6 +1,7 @@
 ﻿using DAL.Data;
 using MedBook.Requests;
 using MediatR;
+using Serilog;
 
 namespace MedBook.Handlers
 {
@@ -16,11 +17,13 @@ namespace MedBook.Handlers
             {
                 dbContext.Remove(sampleIndicator);
                 var status = await dbContext.SaveChangesAsync(cancellationToken);
+                Log.Information($"Sample indicator {sampleIndicator.Name} deleted successfully.");
 
                 return new DeleteSampleIndicatorRequest.Response(status);
             }
-            catch
+            catch (Exception e)
             {
+                Log.Error($"Error deleting sample indicator {sampleIndicator.Name} - {e.Message}");
                 throw;
             }
         }

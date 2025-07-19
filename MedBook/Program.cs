@@ -31,7 +31,7 @@ Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .MinimumLevel.Information()
     .WriteTo.Console()
-    .WriteTo.File("logs/MedBookWeb.txt", rollingInterval: RollingInterval.Day)
+    .WriteTo.File("logs/MedBookWeb_logs.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
 builder.Services.AddSerilog();

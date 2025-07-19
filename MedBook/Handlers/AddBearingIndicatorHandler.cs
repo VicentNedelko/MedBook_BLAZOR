@@ -2,18 +2,19 @@
 using DAL.Data;
 using MedBook.Requests;
 using MediatR;
+using Serilog;
 
 namespace MedBook.Handlers
 {
     public class AddBearingIndicatorHandler(ApplicationDbContext context, IMapper mapper) : IRequestHandler<AddBearingIndicatorRequest, AddBearingIndicatorRequest.Response>
     {
-        private readonly ApplicationDbContext context = context;
+        private readonly ApplicationDbContext context = context ?? throw new ArgumentNullException(nameof(context));
 
         private readonly IMapper mapper = mapper;
 
         public async Task<AddBearingIndicatorRequest.Response> Handle(AddBearingIndicatorRequest request, CancellationToken cancellationToken)
         {
-            var isExists = context?.BearingIndicators.FirstOrDefault(x => x.Name.ToUpper() == request.BearingIndicatorDto.Name.ToUpper());
+            var isExists = context!.BearingIndicators.FirstOrDefault(x => x.Name.ToUpper() == request.BearingIndicatorDto.Name.ToUpper());
             if (isExists is null)
             {
                 var indicator = CreateIndicator(request);
@@ -21,11 +22,15 @@ namespace MedBook.Handlers
 
                 try
                 {
-                    var status = await context?.SaveChangesAsync();
+                    var status = await context!.SaveChangesAsync(cancellationToken);
+                    Log.Information($"Bearing indicator {indicator.Name} saved successfully.");
+
                     return new AddBearingIndicatorRequest.Response(status);
                 }
-                catch
+                catch (Exception e)
                 {
+                    Log.Error($"Error while saving {indicator.Name} - {e.Message}.");
+
                     throw;
                 }
             }

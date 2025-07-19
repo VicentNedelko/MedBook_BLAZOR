@@ -56,22 +56,22 @@
             @if (isDigitalIndicator)
             {
                 <div class="form-floating mb-3">
-                    <InputText id="name" @bind-value="bearingModel.Unit" class="form-control" disabled="true" />
-                    <label for="name">Unit</label>
+                    <InputText id="unit" @bind-value="bearingModel.Unit" class="form-control" disabled="true" />
+                    <label for="unit">Unit</label>
                     <ValidationMessage For="() => InputModel.Unit" class="text-danger" />
                 </div>
                 <div class="form-floating mb-3">
-                    <InputNumber id="name" @bind-value="bearingModel.ReferenceMax" class="form-control" disabled="true" />
-                    <label for="name">Reference MAX</label>
+                    <InputNumber id="refMax" @bind-value="bearingModel.ReferenceMax" class="form-control" disabled="true" />
+                    <label for="refMax">Reference MAX</label>
                 </div>
                 <div class="form-floating mb-3">
-                    <InputNumber id="name" @bind-value="bearingModel.ReferenceMin" class="form-control" disabled="true" />
-                    <label for="name">Reference MIN</label>
+                    <InputNumber id="refMin" @bind-value="bearingModel.ReferenceMin" class="form-control" disabled="true" />
+                    <label for="refMin">Reference MIN</label>
                 </div>
             }
             <div class="form-floating mb-3">
-                <InputText id="name" @bind-value="bearingModel.Description" class="form-control" disabled="true" />
-                <label for="name">Description</label>
+                <InputText id="description" @bind-value="bearingModel.Description" class="form-control" disabled="true" />
+                <label for="description">Description</label>
             </div>
             <button type="submit" class="w-100 btn btn-lg btn-primary" disabled="@isButtonDisable">Add indicator</button>
         </EditForm>
