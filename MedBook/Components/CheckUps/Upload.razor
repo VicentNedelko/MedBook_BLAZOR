@@ -135,8 +135,18 @@ else if (spinnerShow)
         try
         {
             var filePath = await LoadFileAsync(browserFile);
-            var uploadedIndicatorsDictionary = PdfParser.GetIndicatorsWithValues(filePath);
-            uploadedIndicators = GetUploadedIndicators(uploadedIndicatorsDictionary);
+            CancellationTokenSource source = new CancellationTokenSource();
+            source.CancelAfter(TimeSpan.FromSeconds(120));
+
+            try
+            {
+                var uploadedIndicatorsDictionary = await PdfParser.ParseDocumentAsync(filePath, source.Token);
+                uploadedIndicators = GetUploadedIndicators(uploadedIndicatorsDictionary);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
 
             FileService.DeleteFile(filePath);
 

@@ -46,7 +46,6 @@ var mapperConfiguration = new MapperConfiguration(configuration =>
 var mapper = mapperConfiguration.CreateMapper();
 builder.Services.AddSingleton(mapper);
 
-
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultScheme = IdentityConstants.ApplicationScheme;

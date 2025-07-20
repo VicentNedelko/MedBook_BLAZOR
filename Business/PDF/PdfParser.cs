@@ -26,7 +26,17 @@ namespace Business.PDF
 
         public SampleIndicatorDto[] SampleIndicatorDtos => [.. dbContext.SampleIndicators.AsNoTracking().ProjectTo<SampleIndicatorDto>(mapper.ConfigurationProvider)];
 
-        public Dictionary<int, double> GetIndicatorsWithValues(string path)
+        public async Task<Dictionary<int, double>> ParseDocumentAsync(string path, CancellationToken cancellationToken)
+        {
+            var task = Task.Run(() =>
+            {
+                return GetIndicatorsWithValues(path, cancellationToken);
+            });
+
+            return await task;
+        }
+
+        public Dictionary<int, double> GetIndicatorsWithValues(string path, CancellationToken cancellationToken)
         {
             var indicatorIdsWithValues = new Dictionary<int, double>();
 
@@ -59,12 +69,14 @@ namespace Business.PDF
 
                 var text = ContentOrderTextExtractor.GetText(page, true);
 
-                var sentences = text.Split('\n', StringSplitOptions.None).Where(x => x != Environment.NewLine).ToArray();
+                var sentences = text.Split('\n', StringSplitOptions.RemoveEmptyEntries).Where(x => x != Environment.NewLine).ToArray(); // TODO: remove '/r' entries
 
                 foreach (var sentence in sentences)
                 {
                     if (SampleIndicatorDtos.Any(si => sentence.Contains(si.Name)))
                     {
+                        cancellationToken.ThrowIfCancellationRequested();
+
                         var indicator = SampleIndicatorDtos.First(si => sentence.Contains(si.Name));
                         bool valueNotFound = true;
                         var index = Array.IndexOf(sentences, sentence);
