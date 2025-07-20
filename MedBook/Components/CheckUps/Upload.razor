@@ -17,6 +17,7 @@
 @rendermode InteractiveServer
 
 @inject ToastService ToastService
+@inject PdfParser PdfParser
 @inject IMapper Mapper
 @inject IDbContextFactory<ApplicationDbContext> DbFactory
 
@@ -36,6 +37,34 @@
         <div class="col-md-12">
             <QuickGrid Class="table table-striped m-0" Items="uploadedIndicators.AsQueryable()">
                 <PropertyColumn Property="@(i => i.Name)" Title="Name" Sortable="true" IsDefaultSortColumn InitialSortDirection="SortDirection.Ascending" />
+                <TemplateColumn Title="Value" Align="Align.Center">
+                    @if (context.Type == DAL.Enum.IndTYPE.VALUE)
+                    {
+                        <span>@context.Value</span>
+                    }
+                    else
+                    {
+                        switch (context.Value)
+                        {
+                            case 1:
+                                <span>ВЫЯВЛЕНО</span>
+                                return;
+                            case 0:
+                                <span>НЕ выявлено</span>
+                                return;
+                        }
+                    }
+                </TemplateColumn>
+                <TemplateColumn Title="Unit" Align="Align.Center">
+                    @if (context.Unit is not null)
+                    {
+                        <span>@context.Unit</span>
+                    }
+                    else
+                    {
+                        <span>Yes/No</span>
+                    }
+                </TemplateColumn>
                 <TemplateColumn Title="Reference Min" Align="Align.Center">
                     @if (context.ReferenceMin is not null)
                     {
@@ -56,16 +85,6 @@
                         <span>-</span>
                     }
                 </TemplateColumn>
-                <TemplateColumn Title="Unit" Align="Align.Center">
-                    @if (context.Unit is not null)
-                    {
-                        <span>@context.Unit</span>
-                    }
-                    else
-                    {
-                        <span>Yes/No</span>
-                    }
-                </TemplateColumn>
                 <TemplateColumn>
                     <button type="button" @onclick="async () => await OnEditIndicator(context)" class="btn btn-outline-primary">Edit</button>
                 </TemplateColumn>
@@ -78,17 +97,7 @@
 }
 else if (spinnerShow)
 {
-    <div class="container">
-        <div class="row">
-            <div class="col-md-offset-5 col-md-5" />
-            <div class="col-md-2">
-                <div class="spinner-border text-success" role="status">
-                    <span class="visually-hidden">Parsing...</span>
-                </div>
-            </div>
-            <div class="col-md-offset-5 col-md-5" />
-        </div>
-    </div>
+    <Spinner SpinnerText="Uploading..." />
 }
 
 @code {
@@ -126,13 +135,16 @@ else if (spinnerShow)
         try
         {
             var filePath = await LoadFileAsync(browserFile);
-            var uploadedIndicatorsDictionary = PdfParser.GetIndicatorsWithValues(filePath, sampleIndicators);
+            var uploadedIndicatorsDictionary = PdfParser.GetIndicatorsWithValues(filePath);
             uploadedIndicators = GetUploadedIndicators(uploadedIndicatorsDictionary);
+
+            FileService.DeleteFile(filePath);
+
             ToastService.ShowToast($"File {browserFile.Name} has been parsed.", ToastLevel.Success);
         }
-        catch
+        catch (Exception ex)
         {
-            throw;
+            Log.Error($"Error parsing file {browserFile.Name} - {ex.Message}");
         }
 
         isLoading = false;
@@ -151,6 +163,8 @@ else if (spinnerShow)
         catch
         {
             ToastService.ShowToast($"File {browserFile.Name} uploading failed.", ToastLevel.Error);
+            Log.Error($"Error loading file {browserFile.Name}");
+
             throw;
         }
     }
