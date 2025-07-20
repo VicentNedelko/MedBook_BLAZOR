@@ -15,19 +15,19 @@
                 </div>
                 <div class="modal-body">
                     <div class="row">
-                        <div class="col-md-4" style="text-align:right">
+                        <div class="col-md-3" style="text-align:right">
                             <label>Name</label>
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-md-9">
                             <InputText @bind-Value="InputModel!.Name" class="form-control" aria-required="true" />
                         </div>
                     </div>
                     <hr />
                     <div class="row">
-                        <div class="col-md-4" style="text-align:right">
+                        <div class="col-md-3" style="text-align:right">
                             <label>Type</label>
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-md-9">
                             <InputSelect id="type" @bind-Value="InputModel.Type" @bind-Value:after="IsDigitalValue" disabled="@isTypeBlocked" class="form-select" aria-required="true" placeholder="Select type">
                                 <option value=@(IndTYPE.VALUE) disabled="@(InputModel.Type == IndTYPE.VALUE)">Digital value</option>
                                 <option value=@(IndTYPE.YESNO) disabled="@(InputModel.Type == IndTYPE.YESNO)">YES/NO</option>
@@ -38,16 +38,16 @@
                     @if (isDigitalIndicator)
                     {
                         <div class="row">
-                            <div class="col-md-4" style="text-align:right">
+                            <div class="col-md-3" style="text-align:right">
                                 <label>Reference</label>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-3">
                                 <InputNumber @bind-Value="InputModel!.ReferenceMin" class="form-control" aria-required="true" />
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-3">
                                 <InputNumber @bind-Value="InputModel!.ReferenceMax" class="form-control" aria-required="true" />
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <InputText @bind-Value="InputModel!.Unit" class="form-control" aria-required="true" />
                             </div>
                         </div>
@@ -59,17 +59,14 @@
                         InputModel.ReferenceMax = null;
                         InputModel.Unit = null;
                     }
-                    @if (!string.IsNullOrEmpty(InputModel.Description))
-                    {
-                        <div class="row">
-                            <div class="col-md-4" style="text-align:right">
-                                <label>Description</label>
-                            </div>
-                            <div class="col-md-8">
-                                <InputText @bind-Value="InputModel!.Description" class="form-control" aria-required="true" />
-                            </div>
+                    <div class="row">
+                        <div class="col-md-3" style="text-align:right">
+                            <label>Description</label>
                         </div>
-                    }
+                        <div class="col-md-9">
+                            <InputTextArea @bind-Value="InputModel!.Description" class="form-control" aria-required="true" />
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="() => showModal = false">Close</button>

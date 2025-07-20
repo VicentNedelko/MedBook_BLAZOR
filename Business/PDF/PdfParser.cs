@@ -1,5 +1,9 @@
-﻿using Business.DTO;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using Business.DTO;
+using DAL.Data;
 using DAL.Enum;
+using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
@@ -8,7 +12,7 @@ using UglyToad.PdfPig.DocumentLayoutAnalysis.WordExtractor;
 
 namespace Business.PDF
 {
-    public class PdfParser
+    public class PdfParser(ApplicationDbContext dbContext, IMapper mapper)
     {
         private static readonly char[] separators = [' '];
 
@@ -16,12 +20,20 @@ namespace Business.PDF
         
         private static readonly string[] positiveResults = ["полож.", "выявлено"];
 
-        public static Dictionary<int, double> GetIndicatorsWithValues(string path, List<SampleIndicatorDto> sampleIndicators)
+        private readonly ApplicationDbContext dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+
+        private readonly IMapper mapper = mapper;
+
+        public SampleIndicatorDto[] SampleIndicatorDtos => [.. dbContext.SampleIndicators.AsNoTracking().ProjectTo<SampleIndicatorDto>(mapper.ConfigurationProvider)];
+
+        public Dictionary<int, double> GetIndicatorsWithValues(string path)
         {
             var indicatorIdsWithValues = new Dictionary<int, double>();
 
             using PdfDocument document = PdfDocument.Open(path);
-            foreach (Page page in document.GetPages())
+
+            var pages = document.GetPages();
+            foreach (Page page in pages)
             {
                 IReadOnlyList<Letter> letters = page.Letters;
                 string example = string.Join(string.Empty, letters.Select(x => x.Value));
@@ -47,13 +59,13 @@ namespace Business.PDF
 
                 var text = ContentOrderTextExtractor.GetText(page, true);
 
-                var sentences = text.Split('\n', StringSplitOptions.None);
+                var sentences = text.Split('\n', StringSplitOptions.None).Where(x => x != Environment.NewLine).ToArray();
 
                 foreach (var sentence in sentences)
                 {
-                    if (sampleIndicators.Any(si => sentence.Contains(si.Name)))
+                    if (SampleIndicatorDtos.Any(si => sentence.Contains(si.Name)))
                     {
-                        var indicator = sampleIndicators.First(si => sentence.Contains(si.Name));
+                        var indicator = SampleIndicatorDtos.First(si => sentence.Contains(si.Name));
                         bool valueNotFound = true;
                         var index = Array.IndexOf(sentences, sentence);
                         while (valueNotFound)

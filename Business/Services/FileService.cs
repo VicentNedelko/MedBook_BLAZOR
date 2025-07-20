@@ -25,5 +25,17 @@ namespace Business.Services
                 throw;
             }
         }
+
+        public static void DeleteFile(string path)
+        {
+            try
+            {
+                File.Delete(path);
+            }
+            catch
+            {
+                throw;
+            }
+        }
     }
 }
