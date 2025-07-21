@@ -83,7 +83,14 @@ namespace Business.PDF
                         while (valueNotFound)
                         {
                             var indicatorValue = GetIndicatorValue(sentences[index], indicator);
-                            indicatorIdsWithValues.Add(indicator.BearingIndicatorId, indicatorValue);
+                            try
+                            {
+                                indicatorIdsWithValues.Add(indicator.BearingIndicatorId, indicatorValue);
+                            }
+                            catch
+                            {
+                                break;
+                            }
                             if (indicatorValue != 0)
                             {
                                 valueNotFound = false;
