@@ -9,6 +9,7 @@
 @using Business.Services
 @using DAL.Data
 @using MedBook.Components.Layout
+@using MedBook.Constants
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using Microsoft.EntityFrameworkCore
@@ -46,11 +47,11 @@
                     {
                         switch (context.Value)
                         {
-                            case 1:
-                                <span>ВЫЯВЛЕНО</span>
-                                return;
-                            case 0:
+                            case -1: // negative result
                                 <span>НЕ выявлено</span>
+                                return;
+                            case 1: // positive result
+                                <span>ВЫЯВЛЕНО</span>
                                 return;
                         }
                     }
@@ -107,8 +108,6 @@ else if (spinnerShow)
 
     private List<BearingIndicatorDto> bearingIndicators { get; set; }
 
-    private const int maxFileSize = 1024 * 1024 * 4;
-
     private bool isLoading = true;
 
     private bool spinnerShow = false;
@@ -135,12 +134,13 @@ else if (spinnerShow)
         try
         {
             var filePath = await LoadFileAsync(browserFile);
-            CancellationTokenSource source = new CancellationTokenSource();
-            source.CancelAfter(TimeSpan.FromSeconds(120));
+            var source = new CancellationTokenSource();
+            source.CancelAfter(TimeSpan.FromSeconds(WebConstants.cancellationTimeout));
+            var cancellationToken = source.Token;
 
             try
             {
-                var uploadedIndicatorsDictionary = await PdfParser.ParseDocumentAsync(filePath, source.Token);
+                var uploadedIndicatorsDictionary = await PdfParser.ParseDocumentAsync(filePath, cancellationToken);
                 uploadedIndicators = GetUploadedIndicators(uploadedIndicatorsDictionary);
             }
             catch (OperationCanceledException)

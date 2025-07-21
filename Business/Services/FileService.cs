@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Components.Forms;
+﻿using Business.Constants;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace Business.Services
 {
     public static class FileService
     {
-        private const int maxFileSize = 4 * 1024 * 1024;
         public static async Task<string> LoadFile(IBrowserFile file)
         {
             try
@@ -16,7 +16,7 @@ namespace Business.Services
                 var filePath = Path.Combine(rootPath, newFileName);
 
                 await using FileStream fs = new(filePath, FileMode.Create);
-                await file.OpenReadStream(maxFileSize).CopyToAsync(fs);
+                await file.OpenReadStream(BusinessConstants.maxFileSize).CopyToAsync(fs);
 
                 return filePath;
             }

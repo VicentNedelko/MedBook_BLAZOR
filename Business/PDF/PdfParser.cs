@@ -14,9 +14,9 @@ namespace Business.PDF
 {
     public class PdfParser(ApplicationDbContext dbContext, IMapper mapper)
     {
-        private static readonly char[] separators = [' '];
+        private static readonly char[] separators = [' ']; // TODO: spaces are not allowed as a part of value, check real values
 
-        private static readonly string[] negativeResults = ["отрицат.", "не выявлено"];
+        private static readonly string[] negativeResults = ["отрицат."];
         
         private static readonly string[] positiveResults = ["полож.", "выявлено"];
 
@@ -36,7 +36,7 @@ namespace Business.PDF
             return await task;
         }
 
-        public Dictionary<int, double> GetIndicatorsWithValues(string path, CancellationToken cancellationToken)
+        private Dictionary<int, double> GetIndicatorsWithValues(string path, CancellationToken cancellationToken)
         {
             var indicatorIdsWithValues = new Dictionary<int, double>();
 
@@ -103,7 +103,7 @@ namespace Business.PDF
             double result = 0;
             int i = 0;
 
-            var words = sentence.Split(separators, StringSplitOptions.None);
+            var words = sentence.Split(separators, StringSplitOptions.RemoveEmptyEntries);
             if (indicator.Type == IndTYPE.VALUE)
             {
                 while (!isValueParsed && i < words.Length)
